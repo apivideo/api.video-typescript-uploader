@@ -1,8 +1,15 @@
+interface OptionsWithUploadToken extends Options {
+    uploadToken: string;
+}
+interface OptionsWithAccessToken extends Options {
+    accessToken: string;
+    videoId: string;
+}
 interface Options {
     file: File;
-    uploadToken: string;
     chunkSize?: number;
-    uploadEndpoint?: string;
+    apiHost?: string;
+    retries?: number;
 }
 interface UploadProgressEvent {
     loaded: number;
@@ -12,17 +19,18 @@ export declare class VideoUploader {
     private file;
     private chunkSize;
     private uploadEndpoint;
-    private uploadToken;
     private currentChunk;
     private chunksCount;
     private fileSize;
     private fileName;
     private videoId?;
+    private retries;
     private onProgressCallbacks;
-    constructor(options: Options);
+    private headers;
+    constructor(options: OptionsWithAccessToken | OptionsWithUploadToken);
     onProgress(cb: () => UploadProgressEvent): void;
     upload(): Promise<any>;
-    private validateOptions;
+    private sleep;
     private createFormData;
     private uploadCurrentChunk;
 }
