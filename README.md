@@ -145,14 +145,25 @@ On fail, the promise embeds the status code & error message returned by the API.
 ## `onProgress()`
 
 The onProgress() method let you defined an upload progress listener. It takes a callback function with one parameter: the onProgress events.
-An onProgress event contains 2 attributes:
-- loaded: the number of uploaded bytes
-- total: the total number of bytes
+An onProgress event contains the following attributes:
+- uploadedBytes (number): total number of bytes uploaded for this upload
+- totalBytes (number): total size of the file
+- chunksCount (number): number of upload chunks 
+- chunksBytes (number): size of a chunk
+- currentChunk (number): index of the chunk being uploaded
+- currentChunkUploadedBytes (number): number of bytes uploaded for the current chunk
 
 ### Example
 
 ```javascript
     // ... uploader instanciation
     
-    uploader.onProgress((event) => console.log(event.loaded, event.total));
+    uploader.onProgress((event) => {
+        console.log(`total number of bytes uploaded for this upload: ${event.uploadedBytes}.`);
+        console.log(`total size of the file: ${event.totalBytes}.`);
+        console.log(`number of upload chunks: ${event.chunksCount} .`);
+        console.log(`size of a chunk: ${event.chunksBytes}.`);
+        console.log(`index of the chunk being uploaded: ${event.currentChunk}.`);
+        console.log(`number of bytes uploaded for the current chunk: ${event.currentChunkUploadedBytes}.`);
+    });
 ```

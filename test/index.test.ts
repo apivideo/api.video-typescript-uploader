@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { VideoUploader } from '../src/index';
+import { UploadProgressEvent, VideoUploader } from '../src/index';
 import mock from 'xhr-mock';
 
 
@@ -75,6 +75,38 @@ describe('Access token auth', () => {
             done();
         });
 
+    });
+});
+
+describe('Progress listener', () => {
+    beforeEach(() => mock.setup());
+    afterEach(() => mock.teardown());
+
+    it('upload retries', (done) => {
+        const videoId = "9876";
+        let lastUploadProgressEvent: UploadProgressEvent;
+
+        const uploader = new VideoUploader({
+            file: new File([new ArrayBuffer(2000)], "filename"),
+            accessToken: "1234",
+            videoId,
+            chunkSize: 500
+        });
+
+        mock.post(`https://ws.api.video/videos/${videoId}/source`, (req, res) => res.status(201).body("{}"));
+
+        uploader.onProgress((e: UploadProgressEvent) => lastUploadProgressEvent = e);
+
+        uploader.upload().then(() => {
+            expect(lastUploadProgressEvent).to.deep.equal({
+                ...lastUploadProgressEvent,
+                totalBytes: 2000,
+                chunksCount: 4,
+                chunksBytes: 500,
+                currentChunk: 4,
+            });
+            done();
+        });
     });
 });
 
