@@ -2,7 +2,7 @@
 
 # api.video video uploader
 
-Typescript library to upload videos to api.video using delegated token (or usual access token) from front-end.
+Typescript library to upload videos to api.video using delegated upload token (or usual access token) from the front-end.
 
 # Usage
 
@@ -78,9 +78,11 @@ Then, once the `window.onload` event has been trigered, create your player using
 
 ## Options 
 
-The upload is instanciated using an `options` object. Options to provide depend on the way you want to authenticate to the API: either using a delegated upload token (recommanded), or using a usual access token. 
+The upload library is instanciated using an `options` object. Options to provide depend on the way you want to authenticate to the API: either using a delegated upload token (recommanded), or using a usual access token. 
 
-### Using a delegated token:
+### Using a delegated upload token (recommended):
+
+Using delegated upload tokens for authentication is best options when uploading from the client side. To know more about delegated upload token, read the dedicated article on api.video's blog: [Delegated Uploads](https://api.video/blog/tutorials/delegated-uploads).
 
 
 |                   Option name | Mandatory | Type   | Description       |
@@ -88,8 +90,9 @@ The upload is instanciated using an `options` object. Options to provide depend 
 |                   uploadToken | **yes**   | string | your upload token |
 | _common options (see bellow)_ |           |        |                   |
 
+### Using an access token (discouraged):
 
-### Using an access token:
+**Warning**: be aware that exposing your access token client-side can lead to huge security issues. Use this method only if you know what you're doing :).
 
 
 |                   Option name | Mandatory | Type   | Description             |
@@ -104,7 +107,7 @@ The upload is instanciated using an `options` object. Options to provide depend 
 
 | Option name | Mandatory | Type   | Description                                           |
 | ----------: | --------- | ------ | ----------------------------------------------------- |
-|        file | yes       | File   | the file you want to upload                           |
+|        file | **yes**   | File   | the file you want to upload                           |
 |   chunkSize | no        | number | number of bytes of each upload chunk (default: 1MB)   |
 |     apiHost | no        | string | api.video host (default: ws.api.video)                |
 |     retries | no        | number | number of retries when an API call fails (default: 5) |
