@@ -1,6 +1,7 @@
 ![](https://github.com/apivideo/API_OAS_file/blob/master/apivideo_banner.png)
 
 # api.video video uploader
+![npm](https://img.shields.io/npm/v/@api.video/video-uploader) ![ts](https://badgen.net/badge/-/TypeScript/blue?icon=typescript&label)
 
 Typescript library to upload videos to api.video using delegated upload token (or usual access token) from the front-end.
 
