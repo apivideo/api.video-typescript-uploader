@@ -20,7 +20,7 @@ You can then use the library in your script:
 ```javascript
 var { VideoUploader } = require('@api.video/video-uploader');
 
-var uploader = new VideoUploader("#target", {
+var uploader = new VideoUploader({
     file: files[0],
     uploadToken: "YOUR_DELEGATED_TOKEN"
     // ... other optional options
@@ -40,7 +40,7 @@ You can then use the library in your script:
 ```typescript
 import { VideoUploader } from '@api.video/video-uploader'
 
-const uploader = new VideoUploader("#target", {
+const uploader = new VideoUploader({
     file: files[0],
     uploadToken: "YOUR_DELEGATED_TOKEN"
     // ... other optional options
