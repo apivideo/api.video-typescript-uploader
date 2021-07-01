@@ -12,9 +12,13 @@ interface Options {
     retries?: number;
 }
 
-interface UploadProgressEvent {
-    loaded: number;
-    total: number;
+export interface UploadProgressEvent {
+    uploadedBytes: number;
+    totalBytes: number;
+    chunksCount: number;
+    chunksBytes: number;
+    currentChunk: number;
+    currentChunkUploadedBytes: number;
 }
 
 const DEFAULT_CHUNK_SIZE = 1024 * 1024; // 1mb
@@ -65,7 +69,7 @@ export class VideoUploader {
         this.chunksCount = Math.ceil(this.fileSize / this.chunkSize);
     }
 
-    public onProgress(cb: () => UploadProgressEvent) {
+    public onProgress(cb: (e: UploadProgressEvent) => void) {
         this.onProgressCallbacks.push(cb);
     }
 
@@ -80,7 +84,7 @@ export class VideoUploader {
                     this.currentChunk++;
 
                 } catch (e) {
-                    if(retriesCount >= this.retries) {
+                    if (retriesCount >= this.retries) {
                         reject(e);
                         break;
                     }
@@ -122,7 +126,7 @@ export class VideoUploader {
             for (const headerName of Object.keys(this.headers)) {
                 xhr.setRequestHeader(headerName, this.headers[headerName]);
             }
-            xhr.onreadystatechange = (e) => {
+            xhr.onreadystatechange = (_) => {
                 if (xhr.readyState === 4) { // DONE
                     if (xhr.status >= 400) {
                         reject({
@@ -132,10 +136,14 @@ export class VideoUploader {
                     }
                 }
             };
-            xhr.onload = (e) => resolve(JSON.parse(xhr.response));
+            xhr.onload = (_) => resolve(JSON.parse(xhr.response));
             xhr.onprogress = (e) => this.onProgressCallbacks.forEach(cb => cb({
-                loaded: e.loaded + firstByte,
-                total: this.fileSize
+                uploadedBytes: e.loaded + firstByte,
+                totalBytes: this.fileSize,
+                chunksCount: this.chunksCount,
+                chunksBytes: this.chunkSize,
+                currentChunk: this.currentChunk + 1,
+                currentChunkUploadedBytes: e.loaded,
             }));
             xhr.send(this.createFormData(firstByte, lastByte));
         });

@@ -11,9 +11,13 @@ interface Options {
     apiHost?: string;
     retries?: number;
 }
-interface UploadProgressEvent {
-    loaded: number;
-    total: number;
+export interface UploadProgressEvent {
+    uploadedBytes: number;
+    totalBytes: number;
+    chunksCount: number;
+    chunksBytes: number;
+    currentChunk: number;
+    currentChunkUploadedBytes: number;
 }
 export declare class VideoUploader {
     private file;
@@ -28,7 +32,7 @@ export declare class VideoUploader {
     private onProgressCallbacks;
     private headers;
     constructor(options: OptionsWithAccessToken | OptionsWithUploadToken);
-    onProgress(cb: () => UploadProgressEvent): void;
+    onProgress(cb: (e: UploadProgressEvent) => void): void;
     upload(): Promise<any>;
     private sleep;
     private createFormData;
