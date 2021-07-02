@@ -86,10 +86,11 @@ The upload library is instanciated using an `options` object. Options to provide
 Using delegated upload tokens for authentication is best options when uploading from the client side. To know more about delegated upload token, read the dedicated article on api.video's blog: [Delegated Uploads](https://api.video/blog/tutorials/delegated-uploads).
 
 
-|                   Option name | Mandatory | Type   | Description       |
-| ----------------------------: | --------- | ------ | ----------------- |
-|                   uploadToken | **yes**   | string | your upload token |
-| _common options (see bellow)_ |           |        |                   |
+|                   Option name | Mandatory | Type   | Description             |
+| ----------------------------: | --------- | ------ | ----------------------- |
+|                   uploadToken | **yes**   | string | your upload token       |
+|                       videoId | no        | string | id of an existing video |
+| _common options (see bellow)_ |           |        |                         |
 
 ### Using an access token (discouraged):
 

@@ -1,5 +1,6 @@
 interface OptionsWithUploadToken extends Options {
     uploadToken: string;
+    videoId?: string;
 }
 interface OptionsWithAccessToken extends Options {
     accessToken: string;
@@ -47,6 +48,9 @@ export class VideoUploader {
 
         if (options.hasOwnProperty("uploadToken")) {
             const optionsWithUploadToken = options as OptionsWithUploadToken;
+            if (optionsWithUploadToken.videoId) {
+                this.videoId = optionsWithUploadToken.videoId;
+            }
             this.uploadEndpoint = `https://${apiHost}/upload?token=${optionsWithUploadToken.uploadToken}`;
 
         } else if (options.hasOwnProperty("accessToken")) {

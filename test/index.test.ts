@@ -78,6 +78,29 @@ describe('Access token auth', () => {
     });
 });
 
+describe('Delegated upload', () => {
+    beforeEach(() => mock.setup());
+    afterEach(() => mock.teardown());
+
+    it('videoId is transmitted', (done) => {
+        const videoId = "9876";
+        const uploadToken = "1234";
+
+        const uploader = new VideoUploader({
+            file: new File([new ArrayBuffer(2000)], "filename"),
+            uploadToken,
+            videoId,
+        });
+
+        mock.post(`https://ws.api.video/upload?token=${uploadToken}`, (req, res) => {
+            expect(req.body().getAll("videoId")).to.be.eql([videoId]);
+            return res.status(201).body('{}');
+        });
+
+        uploader.upload().then(() => done());
+    });
+});
+
 describe('Progress listener', () => {
     beforeEach(() => mock.setup());
     afterEach(() => mock.teardown());
