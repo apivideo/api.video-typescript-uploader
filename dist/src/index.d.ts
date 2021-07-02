@@ -1,5 +1,6 @@
 interface OptionsWithUploadToken extends Options {
     uploadToken: string;
+    videoId?: string;
 }
 interface OptionsWithAccessToken extends Options {
     accessToken: string;
