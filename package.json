@@ -1,12 +1,12 @@
 {
   "name": "@api.video/video-uploader",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "api.video video uploader",
   "repository": {
     "type": "git",
-    "url": "git@github.com:apivideo/video-uploader.git"
+    "url": "git@github.com:apivideo/typescript-video-uploader.git"
   },
-  "author": "api.video <ecosystem-team@api.video> (https://api.video/)",
+  "author": "api.video <ecosystem@api.video> (https://api.video/)",
   "license": "MIT",
   "keywords": [
     "video",
