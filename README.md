@@ -107,12 +107,12 @@ Using delegated upload tokens for authentication is best options when uploading 
 ### Common options
 
 
-| Option name | Mandatory | Type   | Description                                           |
-| ----------: | --------- | ------ | ----------------------------------------------------- |
-|        file | **yes**   | File   | the file you want to upload                           |
-|   chunkSize | no        | number | number of bytes of each upload chunk (default: 1MB)   |
-|     apiHost | no        | string | api.video host (default: ws.api.video)                |
-|     retries | no        | number | number of retries when an API call fails (default: 5) |
+| Option name | Mandatory | Type   | Description                                                                |
+| ----------: | --------- | ------ | -------------------------------------------------------------------------- |
+|        file | **yes**   | File   | the file you want to upload                                                |
+|   chunkSize | no        | number | number of bytes of each upload chunk (default: 50MB, min: 5MB, max: 128MB) |
+|     apiHost | no        | string | api.video host (default: ws.api.video)                                     |
+|     retries | no        | number | number of retries when an API call fails (default: 5)                      |
 
 
 ## Example
