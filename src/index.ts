@@ -22,7 +22,9 @@ export interface UploadProgressEvent {
     currentChunkUploadedBytes: number;
 }
 
-const DEFAULT_CHUNK_SIZE = 1024 * 1024; // 1mb
+const MIN_CHUNK_SIZE = 1024 * 1024 * 5; // 5mb
+const DEFAULT_CHUNK_SIZE = 1024 * 1024 * 50; // 50mb
+const MAX_CHUNK_SIZE = 1024 * 1024 * 128; // 128mb
 const DEFAULT_RETRIES = 5;
 const DEFAULT_API_HOST = "ws.api.video";
 
@@ -62,6 +64,10 @@ export class VideoUploader {
             this.headers.Authorization = `Bearer ${optionsWithAccessToken.accessToken}`;
         } else {
             throw new Error(`You must provide either an accessToken or an uploadToken`);
+        }
+
+        if(options.chunkSize && (options.chunkSize < MIN_CHUNK_SIZE || options.chunkSize > MAX_CHUNK_SIZE)) {
+            throw new Error(`Invalid chunk size. Minimal allowed value: ${MIN_CHUNK_SIZE / 1024 / 1024}MB, maximum allowed value: ${MAX_CHUNK_SIZE / 1024 / 1024}MB.`);
         }
 
         this.chunkSize = options.chunkSize || DEFAULT_CHUNK_SIZE;
@@ -141,7 +147,7 @@ export class VideoUploader {
                 }
             };
             xhr.onload = (_) => resolve(JSON.parse(xhr.response));
-            xhr.onprogress = (e) => this.onProgressCallbacks.forEach(cb => cb({
+            xhr.upload.onprogress = (e) => this.onProgressCallbacks.forEach(cb => cb({
                 uploadedBytes: e.loaded + firstByte,
                 totalBytes: this.fileSize,
                 chunksCount: this.chunksCount,

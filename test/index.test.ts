@@ -16,6 +16,14 @@ describe('Instanciation', () => {
             file: new File([""], "")
         })).to.throw("'videoId' is missing");
     });
+
+    it('throws if chunk size is invalid', () => {
+        expect(() => new VideoUploader({
+            uploadToken: "aa",
+            file: new File([""], ""),
+            chunkSize: 1024*1024*1
+        })).to.throw("Invalid chunk size. Minimal allowed value: 5MB, maximum allowed value: 128MB.");
+    });
 });
 
 describe('Content-range', () => {
@@ -26,16 +34,16 @@ describe('Content-range', () => {
         const uploadToken = "the-upload-token";
 
         const uploader = new VideoUploader({
-            file: new File([new ArrayBuffer(200)], "filename"),
+            file: new File([new ArrayBuffer(17000000)], "filename"),
             uploadToken,
-            chunkSize: 50,
+            chunkSize: 5*1024*1024,
         });
 
         const expectedRanges = [
-            'bytes 0-49/200',
-            'bytes 50-99/200',
-            'bytes 100-149/200',
-            'bytes 150-199/200',
+            'bytes 0-5242879/17000000',
+            'bytes 5242880-10485759/17000000',
+            'bytes 10485760-15728639/17000000',
+            'bytes 15728640-16999999/17000000',
         ];
 
         mock.post(`https://ws.api.video/upload?token=${uploadToken}`, (req, res) => {
@@ -54,7 +62,7 @@ describe('Access token auth', () => {
     beforeEach(() => mock.setup());
     afterEach(() => mock.teardown());
 
-    it('upload retries', (done) => {
+    it('token value is correct', (done) => {
         const accessToken = "1234";
         const videoId = "9876";
 
@@ -105,15 +113,15 @@ describe('Progress listener', () => {
     beforeEach(() => mock.setup());
     afterEach(() => mock.teardown());
 
-    it('upload retries', (done) => {
+    it('progress event values are correct', (done) => {
         const videoId = "9876";
         let lastUploadProgressEvent: UploadProgressEvent;
 
         const uploader = new VideoUploader({
-            file: new File([new ArrayBuffer(2000)], "filename"),
+            file: new File([new ArrayBuffer(6000000)], "filename"),
             accessToken: "1234",
             videoId,
-            chunkSize: 500
+            chunkSize: 5*1024*1024
         });
 
         mock.post(`https://ws.api.video/videos/${videoId}/source`, (req, res) => res.status(201).body("{}"));
@@ -123,10 +131,10 @@ describe('Progress listener', () => {
         uploader.upload().then(() => {
             expect(lastUploadProgressEvent).to.deep.equal({
                 ...lastUploadProgressEvent,
-                totalBytes: 2000,
-                chunksCount: 4,
-                chunksBytes: 500,
-                currentChunk: 4,
+                totalBytes: 6000000,
+                chunksCount: 2,
+                chunksBytes: 5*1024*1024,
+                currentChunk: 2,
             });
             done();
         });
@@ -166,16 +174,16 @@ describe('Errors & retries', () => {
         const uploadToken = "the-upload-token";
 
         const uploader = new VideoUploader({
-            file: new File([new ArrayBuffer(200)], "filename"),
+            file: new File([new ArrayBuffer(6000000)], "filename"),
             uploadToken,
-            chunkSize: 50,
+            chunkSize: 5*1024*1024,
             retries: 3,
         });
 
         let postCounts = 0;
         mock.post(`https://ws.api.video/upload?token=${uploadToken}`, (req, res) => {
             postCounts++;
-            if (postCounts > 2) {
+            if (postCounts > 1) {
                 return res.status(500).body('{"error": "oups"}');
             }
             return res.status(201).body("{}");

@@ -1,6 +1,6 @@
 {
   "name": "@api.video/video-uploader",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "api.video video uploader",
   "repository": {
     "type": "git",
