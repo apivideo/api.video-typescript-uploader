@@ -1,6 +1,6 @@
 import { expect } from 'chai';
-import { UploadProgressEvent, VideoUploader } from '../src/index';
 import mock from 'xhr-mock';
+import { VideoUploader, UploadProgressEvent } from '../src/index';
 
 
 describe('Instanciation', () => {
@@ -40,10 +40,10 @@ describe('Content-range', () => {
         });
 
         const expectedRanges = [
-            'bytes 0-5242879/17000000',
-            'bytes 5242880-10485759/17000000',
-            'bytes 10485760-15728639/17000000',
-            'bytes 15728640-16999999/17000000',
+            'part 1/4',
+            'part 2/4',
+            'part 3/4',
+            'part 4/4',
         ];
 
         mock.post(`https://ws.api.video/upload?token=${uploadToken}`, (req, res) => {
@@ -74,7 +74,7 @@ describe('Access token auth', () => {
 
 
         mock.post(`https://ws.api.video/videos/${videoId}/source`, (req, res) => {
-            expect(req.header("content-range")).to.be.eq("bytes 0-199/200");
+            expect(req.header("content-range")).to.be.eq("part 1/1");
             expect(req.header("authorization")).to.be.eq(`Bearer ${accessToken}`);
             return res.status(201).body("{}");
         });

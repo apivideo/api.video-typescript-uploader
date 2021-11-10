@@ -1,10 +1,10 @@
 {
   "name": "@api.video/video-uploader",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "api.video video uploader",
   "repository": {
     "type": "git",
-    "url": "git@github.com:apivideo/typescript-video-uploader.git"
+    "url": "git@github.com:apivideo/api.video-typescript-uploader.git"
   },
   "author": "api.video <ecosystem@api.video> (https://api.video/)",
   "license": "MIT",
@@ -29,12 +29,12 @@
     "jsdom": "^16.4.0",
     "jsdom-global": "^3.0.2",
     "mocha": "^8.2.1",
-    "ts-loader": "^8.0.3",
+    "ts-loader": "^9.2.6",
     "ts-node": "^9.1.1",
     "tslint": "^6.1.3",
     "typescript": "^4.0.2",
-    "webpack": "^4.44.1",
-    "webpack-cli": "^3.3.12",
+    "webpack": "^5.63.0",
+    "webpack-cli": "^4.9.1",
     "xhr-mock": "^2.5.1"
   },
   "dependencies": {
