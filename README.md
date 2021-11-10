@@ -1,6 +1,6 @@
 [![badge](https://img.shields.io/twitter/follow/api_video?style=social)](https://twitter.com/intent/follow?screen_name=api_video)
 
-[![badge](https://img.shields.io/github/stars/apivideo/php-api-client?style=social)](https://github.com/apivideo/php-api-client)
+[![badge](https://img.shields.io/github/stars/apivideo/api.video-typescript-uploader?style=social)](https://github.com/apivideo/api.video-typescript-uploader)
 
 [![badge](https://img.shields.io/discourse/topics?server=https%3A%2F%2Fcommunity.api.video)](https://community.api.video)
 
