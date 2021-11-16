@@ -1,15 +1,44 @@
-[![badge](https://img.shields.io/twitter/follow/api_video?style=social)](https://twitter.com/intent/follow?screen_name=api_video)
-
-[![badge](https://img.shields.io/github/stars/apivideo/api.video-typescript-uploader?style=social)](https://github.com/apivideo/api.video-typescript-uploader)
-
-[![badge](https://img.shields.io/discourse/topics?server=https%3A%2F%2Fcommunity.api.video)](https://community.api.video)
-
+[![badge](https://img.shields.io/twitter/follow/api_video?style=social)](https://twitter.com/intent/follow?screen_name=api_video) &nbsp; [![badge](https://img.shields.io/github/stars/apivideo/api.video-typescript-uploader?style=social)](https://github.com/apivideo/api.video-typescript-uploader) &nbsp; [![badge](https://img.shields.io/discourse/topics?server=https%3A%2F%2Fcommunity.api.video)](https://community.api.video)
 ![](https://github.com/apivideo/API_OAS_file/blob/master/apivideo_banner.png)
+<h1 align="center">api.video typescript video uploader</h1>
 
-[api.video](https://api.video) is an API that encodes on the go to facilitate immediate playback, enhancing viewer streaming experiences across multiple devices and platforms. You can stream live or on-demand online videos within minutes.
-
-# api.video typescript video uploader
 ![npm](https://img.shields.io/npm/v/@api.video/video-uploader) ![ts](https://badgen.net/badge/-/TypeScript/blue?icon=typescript&label)
+
+
+[api.video](https://api.video) is the video infrastructure for product builders. Lightning fast video APIs for integrating, scaling, and managing on-demand & low latency live streaming features in your app.
+
+# Table of contents
+
+- [Table of contents](#table-of-contents)
+- [Project description](#project-description)
+- [Getting started](#getting-started)
+  - [Installation](#installation)
+    - [Installation method #1: requirejs](#installation-method-1-requirejs)
+    - [Installation method #2: typescript](#installation-method-2-typescript)
+    - [Simple include in a javascript project](#simple-include-in-a-javascript-project)
+- [Documentation - Standard upload](#documentation---standard-upload)
+  - [Instanciation](#instanciation)
+    - [Options](#options)
+      - [Using a delegated upload token (recommended):](#using-a-delegated-upload-token-recommended)
+      - [Using an access token (discouraged):](#using-an-access-token-discouraged)
+      - [Common options](#common-options)
+    - [Example](#example)
+  - [Methods](#methods)
+    - [`upload()`](#upload)
+    - [`onProgress()`](#onprogress)
+- [Documentation - Progressive upload](#documentation---progressive-upload)
+  - [Instanciation](#instanciation-1)
+    - [Options](#options-1)
+      - [Using a delegated upload token (recommended):](#using-a-delegated-upload-token-recommended-1)
+      - [Using an access token (discouraged):](#using-an-access-token-discouraged-1)
+      - [Common options](#common-options-1)
+    - [Example](#example-1)
+  - [Methods](#methods-1)
+    - [`uploadPart(file: Blob)`](#uploadpartfile-blob)
+    - [`uploadLastPart(file: Blob)`](#uploadlastpartfile-blob)
+    - [`onProgress()`](#onprogress-1)
+
+# Project description
 
 Typescript library to upload videos to api.video using delegated upload token (or usual access token) from the front-end. 
 
@@ -17,10 +46,11 @@ It allows you to upload videos in two ways:
 - standard upload: to send a whole video file in one go
 - progressive upload: to send a video file by chunks, without needing to know the final size of the video file
 
+# Getting started
 
-# Installation
+## Installation
 
-## Installation method #1: requirejs
+### Installation method #1: requirejs
 
 If you use requirejs you can add the library as a dependency to your project with 
 
@@ -46,7 +76,7 @@ var uploader = new ProgressiveUploader({
 }); 
 ```
 
-## Installation method #2: typescript
+### Installation method #2: typescript
 
 If you use Typescript you can add the library as a dependency to your project with 
 
@@ -73,7 +103,7 @@ const uploader = new ProgressiveUploader({
 ```
 
 
-## Simple include in a javascript project
+### Simple include in a javascript project
 
 Include the library in your HTML file like so:
 
@@ -100,7 +130,7 @@ Then, once the `window.onload` event has been trigered, create your player using
 </script>
 ```
 
-# Usage - Standard upload
+# Documentation - Standard upload
 
 ## Instanciation
 
@@ -161,7 +191,7 @@ The upload() method starts the upload. It takes no parameter. It returns a Promi
 On success, the promise embeds the `video` object returned by the API.
 On fail, the promise embeds the status code & error message returned by the API.
 
-#### Example
+**Example**
 
 ```javascript
     // ... uploader instanciation
@@ -182,7 +212,7 @@ An onProgress event contains the following attributes:
 - currentChunk (number): index of the chunk being uploaded
 - currentChunkUploadedBytes (number): number of bytes uploaded for the current chunk
 
-#### Example
+**Example**
 
 ```javascript
     // ... uploader instanciation
@@ -197,7 +227,7 @@ An onProgress event contains the following attributes:
     });
 ```
 
-# Usage - Progressive upload
+# Documentation - Progressive upload
 
 
 ## Instanciation
@@ -255,7 +285,7 @@ The upload() method starts the upload. It takes no parameter. It returns a Promi
 On success, the promise embeds the `video` object returned by the API.
 On fail, the promise embeds the status code & error message returned by the API.
 
-#### Example
+**Example**
 
 ```javascript
     // ... uploader instanciation
@@ -270,7 +300,7 @@ The upload() method starts the upload. It takes no parameter. It returns a Promi
 On success, the promise embeds the `video` object returned by the API.
 On fail, the promise embeds the status code & error message returned by the API.
 
-#### Example
+**Example**
 
 ```javascript
     // ... uploader instanciation
@@ -287,7 +317,7 @@ An onProgress event contains the following attributes:
 - uploadedBytes (number): total number of bytes uploaded for this upload
 - totalBytes (number): total size of the file
 
-#### Example
+**Example**
 
 ```javascript
     // ... uploader instanciation
