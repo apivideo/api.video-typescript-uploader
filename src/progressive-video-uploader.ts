@@ -1,4 +1,4 @@
-import { DEFAULT_API_HOST, DEFAULT_RETRIES, MIN_CHUNK_SIZE } from "./common";
+import { DEFAULT_API_HOST, DEFAULT_RETRIES, MIN_CHUNK_SIZE, VideoUploadResponse } from "./common";
 
 export interface ProgressiveUploaderOptionsWithUploadToken extends Options {
     uploadToken: string;
@@ -63,7 +63,7 @@ export class ProgressiveUploader {
         this.onProgressCallbacks.push(cb);
     }
 
-    public uploadPart(file: Blob) {
+    public uploadPart(file: Blob): Promise<void> {
         this.currentPartBlobsSize += file.size;
         this.currentPartBlobs.push(file);
 
@@ -78,7 +78,7 @@ export class ProgressiveUploader {
         return Promise.resolve();
     }
 
-    public uploadLastPart(file: Blob) {
+    public uploadLastPart(file: Blob): Promise<VideoUploadResponse> {
         this.currentPartBlobs.push(file);
         return this.upload(new Blob(this.currentPartBlobs), true);
     }
@@ -99,8 +99,8 @@ export class ProgressiveUploader {
         })
     }
 
-    private upload(file: Blob, isLast: boolean = false): Promise<any> {
-        const doUpload = (partNum: number) => new Promise((resolve, reject) => {
+    private upload(file: Blob, isLast: boolean = false): Promise<VideoUploadResponse> {
+        const doUpload = (partNum: number): Promise<VideoUploadResponse> => new Promise((resolve, reject) => {
             const fileSize = file.size;
 
             const contentRange = `part ${partNum}/${isLast ? partNum : '*'}`;

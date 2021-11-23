@@ -1,3 +1,4 @@
+import { VideoUploadResponse } from "./common";
 export interface ProgressiveUploaderOptionsWithUploadToken extends Options {
     uploadToken: string;
     videoId?: string;
@@ -30,7 +31,7 @@ export declare class ProgressiveUploader {
     constructor(options: ProgressiveUploaderOptionsWithAccessToken | ProgressiveUploaderOptionsWithUploadToken);
     onProgress(cb: (e: ProgressiveProgressEvent) => void): void;
     uploadPart(file: Blob): Promise<void>;
-    uploadLastPart(file: Blob): Promise<any>;
+    uploadLastPart(file: Blob): Promise<VideoUploadResponse>;
     private createFormData;
     private sleep;
     private upload;
