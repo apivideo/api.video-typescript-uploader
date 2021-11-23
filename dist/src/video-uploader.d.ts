@@ -1,3 +1,4 @@
+import { VideoUploadResponse } from "./common";
 export interface VideoUploaderOptionsWithUploadToken extends Options {
     uploadToken: string;
     videoId?: string;
@@ -34,7 +35,7 @@ export declare class VideoUploader {
     private headers;
     constructor(options: VideoUploaderOptionsWithAccessToken | VideoUploaderOptionsWithUploadToken);
     onProgress(cb: (e: UploadProgressEvent) => void): void;
-    upload(): Promise<any>;
+    upload(): Promise<VideoUploadResponse>;
     private sleep;
     private createFormData;
     private uploadCurrentChunk;

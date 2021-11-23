@@ -1,4 +1,4 @@
-import { DEFAULT_API_HOST, DEFAULT_CHUNK_SIZE, DEFAULT_RETRIES, MAX_CHUNK_SIZE, MIN_CHUNK_SIZE } from "./common";
+import { DEFAULT_API_HOST, DEFAULT_CHUNK_SIZE, DEFAULT_RETRIES, MAX_CHUNK_SIZE, MIN_CHUNK_SIZE, VideoUploadResponse } from "./common";
 
 export interface VideoUploaderOptionsWithUploadToken extends Options {
     uploadToken: string;
@@ -79,7 +79,7 @@ export class VideoUploader {
         this.onProgressCallbacks.push(cb);
     }
 
-    public upload(): Promise<any> {
+    public upload(): Promise<VideoUploadResponse> {
         return new Promise(async (resolve, reject) => {
             let response;
             let retriesCount = 0;
@@ -92,13 +92,13 @@ export class VideoUploader {
                 } catch (e) {
                     if (retriesCount >= this.retries) {
                         reject(e);
-                        break;
+                        return;
                     }
                     await this.sleep(200 + retriesCount * 500);
                     retriesCount++;
                 }
             }
-            resolve(response);
+            resolve(response as VideoUploadResponse);
         });
     }
 
@@ -118,7 +118,7 @@ export class VideoUploader {
         return chunkForm;
     }
 
-    private uploadCurrentChunk(): Promise<any> {
+    private uploadCurrentChunk(): Promise<VideoUploadResponse> {
         return new Promise((resolve, reject) => {
             const firstByte = this.currentChunk * this.chunkSize;
             const computedLastByte = (this.currentChunk + 1) * this.chunkSize;
