@@ -1,6 +1,9 @@
 # Changelog
 All changes to this project will be documented in this file.
 
+## [1.0.2] - 2021-11-24
+- Fix: prevent concurrent requests
+  
 ## [1.0.1] - 2021-11-23
 - Add missing return types in upload methods
   

@@ -28,6 +28,7 @@ export declare class ProgressiveUploader {
     private currentPartNum;
     private currentPartBlobs;
     private currentPartBlobsSize;
+    private queue;
     constructor(options: ProgressiveUploaderOptionsWithAccessToken | ProgressiveUploaderOptionsWithUploadToken);
     onProgress(cb: (e: ProgressiveProgressEvent) => void): void;
     uploadPart(file: Blob): Promise<void>;

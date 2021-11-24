@@ -1,4 +1,5 @@
 import { DEFAULT_API_HOST, DEFAULT_CHUNK_SIZE, DEFAULT_RETRIES, MAX_CHUNK_SIZE, MIN_CHUNK_SIZE, VideoUploadResponse } from "./common";
+import { PromiseQueue } from "./promise-queue";
 
 export interface VideoUploaderOptionsWithUploadToken extends Options {
     uploadToken: string;
@@ -36,6 +37,7 @@ export class VideoUploader {
     private retries: number;
     private onProgressCallbacks: ((e: UploadProgressEvent) => void)[] = [];
     private headers: { [name: string]: string } = {};
+    private queue = new PromiseQueue();
 
     constructor(options: VideoUploaderOptionsWithAccessToken | VideoUploaderOptionsWithUploadToken) {
         const apiHost = options.apiHost || DEFAULT_API_HOST;
@@ -80,7 +82,7 @@ export class VideoUploader {
     }
 
     public upload(): Promise<VideoUploadResponse> {
-        return new Promise(async (resolve, reject) => {
+        return this.queue.add(() => new Promise(async (resolve, reject) => {
             let response;
             let retriesCount = 0;
             while (this.currentChunk < this.chunksCount) {
@@ -99,7 +101,7 @@ export class VideoUploader {
                 }
             }
             resolve(response as VideoUploadResponse);
-        });
+        }));
     }
 
     private sleep(duration: number): Promise<void> {
