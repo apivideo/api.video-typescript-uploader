@@ -1,4 +1,5 @@
 import { DEFAULT_API_HOST, DEFAULT_RETRIES, MIN_CHUNK_SIZE, VideoUploadResponse } from "./common";
+import { PromiseQueue } from "./promise-queue";
 
 export interface ProgressiveUploaderOptionsWithUploadToken extends Options {
     uploadToken: string;
@@ -34,6 +35,7 @@ export class ProgressiveUploader {
     private currentPartNum = 1;
     private currentPartBlobs: Blob[] = [];
     private currentPartBlobsSize = 0;
+    private queue = new PromiseQueue();
 
     constructor(options: ProgressiveUploaderOptionsWithAccessToken | ProgressiveUploaderOptionsWithUploadToken) {
         const apiHost = options.apiHost || DEFAULT_API_HOST;
@@ -68,19 +70,21 @@ export class ProgressiveUploader {
         this.currentPartBlobs.push(file);
 
         if(this.currentPartBlobsSize >= MIN_CHUNK_SIZE) {
-            const promise = this.upload(new Blob(this.currentPartBlobs)).then(res => {
-                this.videoId = res.videoId;
+            return this.queue.add(() => {
+                const promise = this.upload(new Blob(this.currentPartBlobs)).then(res => {
+                    this.videoId = res.videoId;
+                });
+                this.currentPartBlobs = [];
+                this.currentPartBlobsSize = 0;
+                return promise;
             });
-            this.currentPartBlobs = [];
-            this.currentPartBlobsSize = 0;
-            return promise;
         }
         return Promise.resolve();
     }
 
     public uploadLastPart(file: Blob): Promise<VideoUploadResponse> {
         this.currentPartBlobs.push(file);
-        return this.upload(new Blob(this.currentPartBlobs), true);
+        return this.queue.add(() => this.upload(new Blob(this.currentPartBlobs), true));
     }
 
     private createFormData(blob: Blob): FormData {

@@ -16,6 +16,32 @@ describe('Instanciation', () => {
     });
 });
 
+
+describe('Requests synchronization', () => {
+    beforeEach(() => mock.setup());
+    afterEach(() => mock.teardown());
+
+    it('requests are made sequentially', (done) => {
+        const uploadToken = "the-upload-token";
+        const uploader = new ProgressiveUploader({uploadToken});
+
+        let isRequesting = false;
+
+        mock.post(`https://ws.api.video/upload?token=${uploadToken}`, (req, res) => {
+            expect(isRequesting).to.be.equal(false, "concurrent request")
+            isRequesting = true;
+            return new Promise((resolve, _) => setTimeout(() => {
+                isRequesting = false;
+                resolve(res.status(201).body(`{"videoId": "123"}`));
+            }, 500));
+        });
+
+        uploader.uploadPart(new File([new ArrayBuffer(5*1024*1024)], "filename"));
+        uploader.uploadPart(new File([new ArrayBuffer(5*1024*1024)], "filename"));
+        uploader.uploadLastPart(new File([new ArrayBuffer(3*1024*1024)], "filename")).then((r) => done());
+    });
+});
+
 describe('Content-range', () => {
     beforeEach(() => mock.setup());
     afterEach(() => mock.teardown());

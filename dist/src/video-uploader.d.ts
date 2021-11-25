@@ -33,6 +33,7 @@ export declare class VideoUploader {
     private retries;
     private onProgressCallbacks;
     private headers;
+    private queue;
     constructor(options: VideoUploaderOptionsWithAccessToken | VideoUploaderOptionsWithUploadToken);
     onProgress(cb: (e: UploadProgressEvent) => void): void;
     upload(): Promise<VideoUploadResponse>;
