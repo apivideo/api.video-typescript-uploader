@@ -25,7 +25,7 @@ export declare type VideoUploadResponse = {
     readonly assets: {
         readonly iframe: string;
         readonly player: string;
-        readonly hsl: string;
+        readonly hls: string;
         readonly thumbnail: string;
     };
 };

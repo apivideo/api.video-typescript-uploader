@@ -1,6 +1,9 @@
 # Changelog
 All changes to this project will be documented in this file.
 
+## [1.0.3] - 2022-01-25
+- Fix typo in `VideoUploadResponse`type: `hsl` instead of `hls`
+  
 ## [1.0.2] - 2021-11-24
 - Fix: prevent concurrent requests
   
