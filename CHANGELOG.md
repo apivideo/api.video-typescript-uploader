@@ -1,6 +1,9 @@
 # Changelog
 All changes to this project will be documented in this file.
 
+## [1.0.4] - 2022-03-23
+- Export `VideoUploadResponse` type
+
 ## [1.0.3] - 2022-01-25
 - Fix typo in `VideoUploadResponse`type: `hsl` instead of `hls`
   
