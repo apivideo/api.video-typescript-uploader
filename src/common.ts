@@ -11,9 +11,9 @@ export type VideoUploadResponse = {
     readonly public: boolean;
     readonly panoramic: boolean;
     readonly mp4Support: boolean;
-    readonly publishedAt: string;
-    readonly createdAt: string;
-    readonly uploadedAt: string;
+    readonly publishedAt: Date;
+    readonly createdAt: Date;
+    readonly uploadedAt: Date;
     readonly tags: readonly string[];
     readonly metadata: readonly {
         readonly key: string;
