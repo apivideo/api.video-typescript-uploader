@@ -7,7 +7,7 @@ describe('Instanciation', () => {
     it('throws if required param is missing', () => {
         // @ts-ignore
         expect(() => new ProgressiveUploader({
-        })).to.throw("You must provide either an accessToken or an uploadToken");
+        })).to.throw("You must provide either an accessToken, an uploadToken or an API key");
 
         // @ts-ignore
         expect(() => new ProgressiveUploader({

@@ -1,4 +1,4 @@
-import { DEFAULT_API_HOST, DEFAULT_RETRIES, MIN_CHUNK_SIZE, VideoUploadResponse } from "./common";
+import { apiResponseToVideoUploadResponse, DEFAULT_API_HOST, DEFAULT_RETRIES, MIN_CHUNK_SIZE, VideoUploadResponse } from "./common";
 import { PromiseQueue } from "./promise-queue";
 
 export interface ProgressiveUploaderOptionsWithUploadToken extends Options {
@@ -7,6 +7,10 @@ export interface ProgressiveUploaderOptionsWithUploadToken extends Options {
 }
 export interface ProgressiveUploaderOptionsWithAccessToken extends Options {
     accessToken: string;
+    videoId: string;
+}
+export interface ProgressiveUploaderOptionsWithApiKey extends Options {
+    apiKey: string;
     videoId: string;
 }
 interface Options {
@@ -37,7 +41,7 @@ export class ProgressiveUploader {
     private currentPartBlobsSize = 0;
     private queue = new PromiseQueue();
 
-    constructor(options: ProgressiveUploaderOptionsWithAccessToken | ProgressiveUploaderOptionsWithUploadToken) {
+    constructor(options: ProgressiveUploaderOptionsWithAccessToken | ProgressiveUploaderOptionsWithUploadToken | ProgressiveUploaderOptionsWithApiKey) {
         const apiHost = options.apiHost || DEFAULT_API_HOST;
 
         if (options.hasOwnProperty("uploadToken")) {
@@ -54,8 +58,15 @@ export class ProgressiveUploader {
             }
             this.uploadEndpoint = `https://${apiHost}/videos/${optionsWithAccessToken.videoId}/source`;
             this.headers.Authorization = `Bearer ${optionsWithAccessToken.accessToken}`;
-        } else {
-            throw new Error(`You must provide either an accessToken or an uploadToken`);
+        } else if (options.hasOwnProperty("apiKey")) {
+            const optionsWithApiKey = options as ProgressiveUploaderOptionsWithApiKey;
+            if (!optionsWithApiKey.videoId) {
+                throw new Error("'videoId' is missing");
+            }
+            this.uploadEndpoint = `https://${apiHost}/videos/${optionsWithApiKey.videoId}/source`;
+            this.headers.Authorization = `Basic ${btoa(optionsWithApiKey.apiKey + ":")}`;
+        }else {
+            throw new Error(`You must provide either an accessToken, an uploadToken or an API key`);
         }
 
         this.retries = options.retries || DEFAULT_RETRIES;
@@ -125,7 +136,7 @@ export class ProgressiveUploader {
                     }
                 }
             };
-            xhr.onload = (_) => resolve(JSON.parse(xhr.response));
+            xhr.onload = (_) => resolve(apiResponseToVideoUploadResponse(xhr.response))
             xhr.upload.onprogress = (e) => this.onProgressCallbacks.forEach(cb => cb({
                 uploadedBytes: e.loaded,
                 totalBytes: fileSize,

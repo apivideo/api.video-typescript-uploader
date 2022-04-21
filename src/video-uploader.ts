@@ -1,4 +1,4 @@
-import { DEFAULT_API_HOST, DEFAULT_CHUNK_SIZE, DEFAULT_RETRIES, MAX_CHUNK_SIZE, MIN_CHUNK_SIZE, VideoUploadResponse } from "./common";
+import { apiResponseToVideoUploadResponse, DEFAULT_API_HOST, DEFAULT_CHUNK_SIZE, DEFAULT_RETRIES, MAX_CHUNK_SIZE, MIN_CHUNK_SIZE, VideoUploadResponse } from "./common";
 import { PromiseQueue } from "./promise-queue";
 
 export interface VideoUploaderOptionsWithUploadToken extends Options {
@@ -7,6 +7,10 @@ export interface VideoUploaderOptionsWithUploadToken extends Options {
 }
 export interface VideoUploaderOptionsWithAccessToken extends Options {
     accessToken: string;
+    videoId: string;
+}
+export interface VideoUploaderOptionsWithApiKey extends Options {
+    apiKey: string;
     videoId: string;
 }
 interface Options {
@@ -39,7 +43,7 @@ export class VideoUploader {
     private headers: { [name: string]: string } = {};
     private queue = new PromiseQueue();
 
-    constructor(options: VideoUploaderOptionsWithAccessToken | VideoUploaderOptionsWithUploadToken) {
+    constructor(options: VideoUploaderOptionsWithAccessToken | VideoUploaderOptionsWithUploadToken | VideoUploaderOptionsWithApiKey) {
         const apiHost = options.apiHost || DEFAULT_API_HOST;
 
         if (!options.file) {
@@ -60,8 +64,15 @@ export class VideoUploader {
             }
             this.uploadEndpoint = `https://${apiHost}/videos/${optionsWithAccessToken.videoId}/source`;
             this.headers.Authorization = `Bearer ${optionsWithAccessToken.accessToken}`;
+        }  else if (options.hasOwnProperty("apiKey")) {
+            const optionsWithApiKey = options as VideoUploaderOptionsWithApiKey;
+            if (!optionsWithApiKey.videoId) {
+                throw new Error("'videoId' is missing");
+            }
+            this.uploadEndpoint = `https://${apiHost}/videos/${optionsWithApiKey.videoId}/source`;
+            this.headers.Authorization = `Basic ${btoa(optionsWithApiKey.apiKey + ":")}`;
         } else {
-            throw new Error(`You must provide either an accessToken or an uploadToken`);
+            throw new Error(`You must provide either an accessToken, an uploadToken or an API key`);
         }
 
         if(options.chunkSize && (options.chunkSize < MIN_CHUNK_SIZE || options.chunkSize > MAX_CHUNK_SIZE)) {
@@ -100,7 +111,8 @@ export class VideoUploader {
                     retriesCount++;
                 }
             }
-            resolve(response as VideoUploadResponse);
+
+            resolve(apiResponseToVideoUploadResponse(response));
         }));
     }
 
@@ -120,7 +132,7 @@ export class VideoUploader {
         return chunkForm;
     }
 
-    private uploadCurrentChunk(): Promise<VideoUploadResponse> {
+    private uploadCurrentChunk(): Promise<any> {
         return new Promise((resolve, reject) => {
             const firstByte = this.currentChunk * this.chunkSize;
             const computedLastByte = (this.currentChunk + 1) * this.chunkSize;
