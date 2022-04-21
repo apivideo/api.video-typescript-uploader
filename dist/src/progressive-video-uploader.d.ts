@@ -7,6 +7,10 @@ export interface ProgressiveUploaderOptionsWithAccessToken extends Options {
     accessToken: string;
     videoId: string;
 }
+export interface ProgressiveUploaderOptionsWithApiKey extends Options {
+    apiKey: string;
+    videoId: string;
+}
 interface Options {
     apiHost?: string;
     retries?: number;
@@ -29,7 +33,7 @@ export declare class ProgressiveUploader {
     private currentPartBlobs;
     private currentPartBlobsSize;
     private queue;
-    constructor(options: ProgressiveUploaderOptionsWithAccessToken | ProgressiveUploaderOptionsWithUploadToken);
+    constructor(options: ProgressiveUploaderOptionsWithAccessToken | ProgressiveUploaderOptionsWithUploadToken | ProgressiveUploaderOptionsWithApiKey);
     onProgress(cb: (e: ProgressiveProgressEvent) => void): void;
     uploadPart(file: Blob): Promise<void>;
     uploadLastPart(file: Blob): Promise<VideoUploadResponse>;

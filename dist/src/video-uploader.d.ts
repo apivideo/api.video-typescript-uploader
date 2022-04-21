@@ -7,6 +7,10 @@ export interface VideoUploaderOptionsWithAccessToken extends Options {
     accessToken: string;
     videoId: string;
 }
+export interface VideoUploaderOptionsWithApiKey extends Options {
+    apiKey: string;
+    videoId: string;
+}
 interface Options {
     file: File;
     chunkSize?: number;
@@ -34,7 +38,7 @@ export declare class VideoUploader {
     private onProgressCallbacks;
     private headers;
     private queue;
-    constructor(options: VideoUploaderOptionsWithAccessToken | VideoUploaderOptionsWithUploadToken);
+    constructor(options: VideoUploaderOptionsWithAccessToken | VideoUploaderOptionsWithUploadToken | VideoUploaderOptionsWithApiKey);
     onProgress(cb: (e: UploadProgressEvent) => void): void;
     upload(): Promise<VideoUploadResponse>;
     private sleep;

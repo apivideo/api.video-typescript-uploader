@@ -21,6 +21,7 @@
     - [Options](#options)
       - [Using a delegated upload token (recommended):](#using-a-delegated-upload-token-recommended)
       - [Using an access token (discouraged):](#using-an-access-token-discouraged)
+      - [Using an API key (**strongly** discouraged):](#using-an-api-key-strongly-discouraged)
       - [Common options](#common-options)
     - [Example](#example)
   - [Methods](#methods)
@@ -161,6 +162,18 @@ Using delegated upload tokens for authentication is best options when uploading 
 | _common options (see bellow)_ |           |        |                         |
 
 
+#### Using an API key (**strongly** discouraged):
+
+**Warning**: be aware that exposing your API key client-side can lead to huge security issues. Use this method only if you know what you're doing :).
+
+
+|                   Option name | Mandatory | Type   | Description             |
+| ----------------------------: | --------- | ------ | ----------------------- |
+|                       API Key | **yes**   | string | your api.video API key  |
+|                       videoId | **yes**   | string | id of an existing video |
+| _common options (see bellow)_ |           |        |                         |
+
+
 #### Common options
 
 
@@ -262,10 +275,10 @@ Using delegated upload tokens for authentication is best options when uploading 
 #### Common options
 
 
-| Option name | Mandatory | Type   | Description                                                                |
-| ----------: | --------- | ------ | -------------------------------------------------------------------------- |
-|     apiHost | no        | string | api.video host (default: ws.api.video)                                     |
-|     retries | no        | number | number of retries when an API call fails (default: 5)                      |
+| Option name | Mandatory | Type   | Description                                           |
+| ----------: | --------- | ------ | ----------------------------------------------------- |
+|     apiHost | no        | string | api.video host (default: ws.api.video)                |
+|     retries | no        | number | number of retries when an API call fails (default: 5) |
 
 
 ### Example

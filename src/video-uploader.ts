@@ -9,6 +9,10 @@ export interface VideoUploaderOptionsWithAccessToken extends Options {
     accessToken: string;
     videoId: string;
 }
+export interface VideoUploaderOptionsWithApiKey extends Options {
+    apiKey: string;
+    videoId: string;
+}
 interface Options {
     file: File;
     chunkSize?: number;
@@ -39,7 +43,7 @@ export class VideoUploader {
     private headers: { [name: string]: string } = {};
     private queue = new PromiseQueue();
 
-    constructor(options: VideoUploaderOptionsWithAccessToken | VideoUploaderOptionsWithUploadToken) {
+    constructor(options: VideoUploaderOptionsWithAccessToken | VideoUploaderOptionsWithUploadToken | VideoUploaderOptionsWithApiKey) {
         const apiHost = options.apiHost || DEFAULT_API_HOST;
 
         if (!options.file) {
@@ -60,8 +64,15 @@ export class VideoUploader {
             }
             this.uploadEndpoint = `https://${apiHost}/videos/${optionsWithAccessToken.videoId}/source`;
             this.headers.Authorization = `Bearer ${optionsWithAccessToken.accessToken}`;
+        }  else if (options.hasOwnProperty("apiKey")) {
+            const optionsWithApiKey = options as VideoUploaderOptionsWithApiKey;
+            if (!optionsWithApiKey.videoId) {
+                throw new Error("'videoId' is missing");
+            }
+            this.uploadEndpoint = `https://${apiHost}/videos/${optionsWithApiKey.videoId}/source`;
+            this.headers.Authorization = `Basic ${btoa(optionsWithApiKey.apiKey + ":")}`;
         } else {
-            throw new Error(`You must provide either an accessToken or an uploadToken`);
+            throw new Error(`You must provide either an accessToken, an uploadToken or an API key`);
         }
 
         if(options.chunkSize && (options.chunkSize < MIN_CHUNK_SIZE || options.chunkSize > MAX_CHUNK_SIZE)) {

@@ -1,6 +1,10 @@
 # Changelog
 All changes to this project will be documented in this file.
 
+## [1.0.5] - 2022-03-24
+- Fix date attributes types
+- Add authentication using an API key
+
 ## [1.0.4] - 2022-03-23
 - Export `VideoUploadResponse` type
 
