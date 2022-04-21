@@ -1,4 +1,4 @@
-import { DEFAULT_API_HOST, DEFAULT_RETRIES, MIN_CHUNK_SIZE, VideoUploadResponse } from "./common";
+import { apiResponseToVideoUploadResponse, DEFAULT_API_HOST, DEFAULT_RETRIES, MIN_CHUNK_SIZE, VideoUploadResponse } from "./common";
 import { PromiseQueue } from "./promise-queue";
 
 export interface ProgressiveUploaderOptionsWithUploadToken extends Options {
@@ -136,7 +136,7 @@ export class ProgressiveUploader {
                     }
                 }
             };
-            xhr.onload = (_) => resolve(JSON.parse(xhr.response));
+            xhr.onload = (_) => resolve(apiResponseToVideoUploadResponse(xhr.response))
             xhr.upload.onprogress = (e) => this.onProgressCallbacks.forEach(cb => cb({
                 uploadedBytes: e.loaded,
                 totalBytes: fileSize,

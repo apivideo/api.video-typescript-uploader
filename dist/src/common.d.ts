@@ -5,27 +5,28 @@ export declare const DEFAULT_RETRIES = 5;
 export declare const DEFAULT_API_HOST = "ws.api.video";
 export declare type VideoUploadResponse = {
     readonly videoId: string;
-    readonly title: string;
-    readonly description: string;
-    readonly public: boolean;
-    readonly panoramic: boolean;
-    readonly mp4Support: boolean;
-    readonly publishedAt: Date;
-    readonly createdAt: Date;
-    readonly uploadedAt: Date;
-    readonly tags: readonly string[];
-    readonly metadata: readonly {
-        readonly key: string;
-        readonly value: string;
+    readonly title?: string;
+    readonly description?: string;
+    readonly _public?: boolean;
+    readonly panoramic?: boolean;
+    readonly mp4Support?: boolean;
+    readonly publishedAt?: Date;
+    readonly createdAt?: Date;
+    readonly updatedAt?: Date;
+    readonly tags?: string[];
+    readonly metadata?: {
+        readonly key?: string;
+        readonly value?: string;
     }[];
-    readonly source: {
-        readonly type: string;
-        readonly uri: string;
+    readonly source?: {
+        readonly type?: string;
+        readonly uri?: string;
     };
-    readonly assets: {
-        readonly iframe: string;
-        readonly player: string;
-        readonly hls: string;
-        readonly thumbnail: string;
+    readonly assets?: {
+        readonly iframe?: string;
+        readonly player?: string;
+        readonly hls?: string;
+        readonly thumbnail?: string;
     };
 };
+export declare const apiResponseToVideoUploadResponse: (response: any) => VideoUploadResponse;

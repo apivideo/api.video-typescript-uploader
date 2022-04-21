@@ -4,29 +4,41 @@ export const MAX_CHUNK_SIZE = 1024 * 1024 * 128; // 128mb
 export const DEFAULT_RETRIES = 5;
 export const DEFAULT_API_HOST = "ws.api.video";
 
-export type VideoUploadResponse = {
-    readonly videoId: string;
-    readonly title: string;
-    readonly description: string;
-    readonly public: boolean;
-    readonly panoramic: boolean;
-    readonly mp4Support: boolean;
-    readonly publishedAt: Date;
-    readonly createdAt: Date;
-    readonly uploadedAt: Date;
-    readonly tags: readonly string[];
-    readonly metadata: readonly {
-        readonly key: string;
-        readonly value: string;
-    }[];
-    readonly source: {
-      readonly type: string;
-      readonly uri: string;
-    };
-    readonly assets: {
-      readonly iframe: string;
-      readonly player: string;
-      readonly hls: string;
-      readonly thumbnail: string;
-    };
+export declare type VideoUploadResponse = {
+  readonly videoId: string;
+  readonly title?: string;
+  readonly description?: string;
+  readonly _public?: boolean;
+  readonly panoramic?: boolean;
+  readonly mp4Support?: boolean;
+  readonly publishedAt?: Date;
+  readonly createdAt?: Date;
+  readonly updatedAt?: Date;
+  readonly tags?: string[];
+  readonly metadata?: {
+    readonly key?: string;
+    readonly value?: string;
+  }[];
+  readonly source?: {
+    readonly type?: string;
+    readonly uri?: string;
   };
+  readonly assets?: {
+    readonly iframe?: string;
+    readonly player?: string;
+    readonly hls?: string;
+    readonly thumbnail?: string;
+  };
+};
+
+export const apiResponseToVideoUploadResponse = (response: any): VideoUploadResponse => {
+  const res = {
+    ...response,
+    _public: response.public,
+    publishedAt: response.publishedAt ? new Date(response.publishedAt) : undefined,
+    createdAt: response.createdAt ? new Date(response.createdAt) : undefined,
+    updatedAt: response.updatedAt ? new Date(response.updatedAt) : undefined,
+  };
+  delete res.public;
+  return res;
+}

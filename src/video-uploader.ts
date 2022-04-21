@@ -1,4 +1,4 @@
-import { DEFAULT_API_HOST, DEFAULT_CHUNK_SIZE, DEFAULT_RETRIES, MAX_CHUNK_SIZE, MIN_CHUNK_SIZE, VideoUploadResponse } from "./common";
+import { apiResponseToVideoUploadResponse, DEFAULT_API_HOST, DEFAULT_CHUNK_SIZE, DEFAULT_RETRIES, MAX_CHUNK_SIZE, MIN_CHUNK_SIZE, VideoUploadResponse } from "./common";
 import { PromiseQueue } from "./promise-queue";
 
 export interface VideoUploaderOptionsWithUploadToken extends Options {
@@ -111,7 +111,8 @@ export class VideoUploader {
                     retriesCount++;
                 }
             }
-            resolve(response as VideoUploadResponse);
+
+            resolve(apiResponseToVideoUploadResponse(response));
         }));
     }
 
@@ -131,7 +132,7 @@ export class VideoUploader {
         return chunkForm;
     }
 
-    private uploadCurrentChunk(): Promise<VideoUploadResponse> {
+    private uploadCurrentChunk(): Promise<any> {
         return new Promise((resolve, reject) => {
             const firstByte = this.currentChunk * this.chunkSize;
             const computedLastByte = (this.currentChunk + 1) * this.chunkSize;
