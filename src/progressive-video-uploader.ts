@@ -1,4 +1,4 @@
-import { apiResponseToVideoUploadResponse, DEFAULT_API_HOST, DEFAULT_RETRIES, MIN_CHUNK_SIZE, VideoUploadResponse } from "./common";
+import { apiResponseToVideoUploadResponse, DEFAULT_API_HOST, DEFAULT_RETRIES, MIN_CHUNK_SIZE, parseErrorResponse, VideoUploadResponse } from "./common";
 import { PromiseQueue } from "./promise-queue";
 
 export interface ProgressiveUploaderOptionsWithUploadToken extends Options {
@@ -129,10 +129,7 @@ export class ProgressiveUploader {
             xhr.onreadystatechange = (_) => {
                 if (xhr.readyState === 4) { // DONE
                     if (xhr.status >= 400) {
-                        reject({
-                            status: xhr.status,
-                            message: xhr.response
-                        });
+                        reject(parseErrorResponse(xhr));
                     }
                 }
             };

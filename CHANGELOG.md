@@ -1,7 +1,10 @@
 # Changelog
 All changes to this project will be documented in this file.
 
-## [1.0.5] - 2022-03-24
+## [1.0.6] - 2022-04-22
+- Improve errors management
+
+## [1.0.5] - 2022-04-21
 - Fix date attributes types
 - Add authentication using an API key
 
