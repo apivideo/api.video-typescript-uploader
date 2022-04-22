@@ -166,8 +166,7 @@ describe('Errors & retries', () => {
         uploader.uploadPart(new File([new ArrayBuffer(5*1024*1024)], "filename")).then(() => {
             throw new Error('should not succeed');
         }).catch((e) => {
-            expect(e.status).to.be.eq(500);
-            expect(e.message).to.be.eq('{"error": "oups"}');
+            expect(e).to.be.eqls({ status: 500, raw: '{"error": "oups"}', error: 'oups' });
             done();
         });
     }).timeout(20000);

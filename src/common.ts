@@ -31,6 +31,14 @@ export declare type VideoUploadResponse = {
   };
 };
 
+export type VideoUploadError = {
+  status: number;
+  type?: string;
+  title?: string;
+  reason?: string;
+  raw: string;
+}
+
 export const apiResponseToVideoUploadResponse = (response: any): VideoUploadResponse => {
   const res = {
     ...response,
@@ -41,4 +49,24 @@ export const apiResponseToVideoUploadResponse = (response: any): VideoUploadResp
   };
   delete res.public;
   return res;
+}
+
+export const parseErrorResponse = (xhr: XMLHttpRequest): VideoUploadError => {
+  try {
+    const parsedResponse = JSON.parse(xhr.response);
+
+    return {
+      status: xhr.status,
+      raw: xhr.response,
+      ...parsedResponse
+    }
+  } catch(e) {
+    // empty
+  }
+
+  return {
+    status: xhr.status,
+    raw: xhr.response,
+    reason: "UNKWOWN",
+  }
 }

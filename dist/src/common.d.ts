@@ -29,4 +29,12 @@ export declare type VideoUploadResponse = {
         readonly thumbnail?: string;
     };
 };
+export declare type VideoUploadError = {
+    status: number;
+    type?: string;
+    title?: string;
+    reason?: string;
+    raw: string;
+};
 export declare const apiResponseToVideoUploadResponse: (response: any) => VideoUploadResponse;
+export declare const parseErrorResponse: (xhr: XMLHttpRequest) => VideoUploadError;
