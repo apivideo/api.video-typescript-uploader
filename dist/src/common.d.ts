@@ -38,3 +38,14 @@ export declare type VideoUploadError = {
 };
 export declare const apiResponseToVideoUploadResponse: (response: any) => VideoUploadResponse;
 export declare const parseErrorResponse: (xhr: XMLHttpRequest) => VideoUploadError;
+export declare const parseUserConfig: (options: {
+    apiHost?: string | undefined;
+    uploadToken?: string | undefined;
+    accessToken?: string | undefined;
+    apiKey?: string | undefined;
+    videoId?: string | undefined;
+}) => {
+    uploadEndpoint: string;
+    authHeader?: string;
+    videoId?: string;
+};
