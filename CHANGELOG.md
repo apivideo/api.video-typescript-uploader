@@ -1,6 +1,10 @@
 # Changelog
 All changes to this project will be documented in this file.
 
+## [1.0.7] - 2022-04-26
+- Don't retry on 401 errors
+- Mutualize some code
+  
 ## [1.0.6] - 2022-04-22
 - Improve errors management
 

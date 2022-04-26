@@ -60,7 +60,7 @@ export const parseErrorResponse = (xhr: XMLHttpRequest): VideoUploadError => {
       raw: xhr.response,
       ...parsedResponse
     }
-  } catch(e) {
+  } catch (e) {
     // empty
   }
 
@@ -69,4 +69,37 @@ export const parseErrorResponse = (xhr: XMLHttpRequest): VideoUploadError => {
     raw: xhr.response,
     reason: "UNKWOWN",
   }
+}
+
+export const parseUserConfig = (options: { apiHost?: string, uploadToken?: string, accessToken?: string, apiKey?: string, videoId?: string }): {uploadEndpoint: string, authHeader?: string, videoId?: string} => {
+  const apiHost = options.apiHost || DEFAULT_API_HOST;
+
+  if (options.uploadToken) {
+    return {
+      ...(options.videoId ? { videoId: options.videoId } : {}),
+      uploadEndpoint: `https://${apiHost}/upload?token=${options.uploadToken}`
+    }
+  }
+
+  if (options.accessToken) {
+    if (!options.videoId) {
+      throw new Error("'videoId' is missing");
+    }
+    return {
+      uploadEndpoint: `https://${apiHost}/videos/${options.videoId}/source`,
+      authHeader: `Bearer ${options.accessToken}`
+    }
+  }
+
+  if (options.apiKey) {
+    if (!options.videoId) {
+      throw new Error("'videoId' is missing");
+    }
+    return {
+      uploadEndpoint: `https://${apiHost}/videos/${options.videoId}/source`,
+      authHeader: `Basic ${btoa(options.apiKey + ":")}`
+    }
+  }
+
+  throw new Error(`You must provide either an accessToken, an uploadToken or an API key`);
 }

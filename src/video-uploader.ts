@@ -1,4 +1,4 @@
-import { apiResponseToVideoUploadResponse, DEFAULT_API_HOST, DEFAULT_CHUNK_SIZE, DEFAULT_RETRIES, MAX_CHUNK_SIZE, MIN_CHUNK_SIZE, parseErrorResponse, VideoUploadResponse } from "./common";
+import { apiResponseToVideoUploadResponse, DEFAULT_API_HOST, DEFAULT_CHUNK_SIZE, DEFAULT_RETRIES, MAX_CHUNK_SIZE, MIN_CHUNK_SIZE, parseErrorResponse, parseUserConfig, VideoUploadError, VideoUploadResponse } from "./common";
 import { PromiseQueue } from "./promise-queue";
 
 export interface VideoUploaderOptionsWithUploadToken extends Options {
@@ -44,35 +44,16 @@ export class VideoUploader {
     private queue = new PromiseQueue();
 
     constructor(options: VideoUploaderOptionsWithAccessToken | VideoUploaderOptionsWithUploadToken | VideoUploaderOptionsWithApiKey) {
-        const apiHost = options.apiHost || DEFAULT_API_HOST;
-
         if (!options.file) {
             throw new Error("'file' is missing");
         }
 
-        if (options.hasOwnProperty("uploadToken")) {
-            const optionsWithUploadToken = options as VideoUploaderOptionsWithUploadToken;
-            if (optionsWithUploadToken.videoId) {
-                this.videoId = optionsWithUploadToken.videoId;
-            }
-            this.uploadEndpoint = `https://${apiHost}/upload?token=${optionsWithUploadToken.uploadToken}`;
+        const parsedCondig = parseUserConfig(options);
 
-        } else if (options.hasOwnProperty("accessToken")) {
-            const optionsWithAccessToken = options as VideoUploaderOptionsWithAccessToken;
-            if (!optionsWithAccessToken.videoId) {
-                throw new Error("'videoId' is missing");
-            }
-            this.uploadEndpoint = `https://${apiHost}/videos/${optionsWithAccessToken.videoId}/source`;
-            this.headers.Authorization = `Bearer ${optionsWithAccessToken.accessToken}`;
-        }  else if (options.hasOwnProperty("apiKey")) {
-            const optionsWithApiKey = options as VideoUploaderOptionsWithApiKey;
-            if (!optionsWithApiKey.videoId) {
-                throw new Error("'videoId' is missing");
-            }
-            this.uploadEndpoint = `https://${apiHost}/videos/${optionsWithApiKey.videoId}/source`;
-            this.headers.Authorization = `Basic ${btoa(optionsWithApiKey.apiKey + ":")}`;
-        } else {
-            throw new Error(`You must provide either an accessToken, an uploadToken or an API key`);
+        this.uploadEndpoint = parsedCondig.uploadEndpoint;
+        this.videoId = parsedCondig.videoId;
+        if(parsedCondig.authHeader) {
+            this.headers.Authorization = parsedCondig.authHeader;
         }
 
         if(options.chunkSize && (options.chunkSize < MIN_CHUNK_SIZE || options.chunkSize > MAX_CHUNK_SIZE)) {
