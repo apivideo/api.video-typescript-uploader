@@ -2,7 +2,6 @@ import { expect } from 'chai';
 import mock from 'xhr-mock';
 import { VideoUploader, UploadProgressEvent } from '../src/index';
 
-
 describe('Instanciation', () => {
     it('throws if required param is missing', () => {
         // @ts-ignore

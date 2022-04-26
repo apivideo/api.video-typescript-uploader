@@ -1,19 +1,9 @@
-import { VideoUploadResponse } from "./common";
-export interface ProgressiveUploaderOptionsWithUploadToken extends Options {
-    uploadToken: string;
-    videoId?: string;
+import { AbstractUploader, CommonOptions, VideoUploadResponse, WithAccessToken, WithApiKey, WithUploadToken } from "./abstract-uploader";
+export interface ProgressiveUploaderOptionsWithUploadToken extends CommonOptions, WithUploadToken {
 }
-export interface ProgressiveUploaderOptionsWithAccessToken extends Options {
-    accessToken: string;
-    videoId: string;
+export interface ProgressiveUploaderOptionsWithAccessToken extends CommonOptions, WithAccessToken {
 }
-export interface ProgressiveUploaderOptionsWithApiKey extends Options {
-    apiKey: string;
-    videoId: string;
-}
-interface Options {
-    apiHost?: string;
-    retries?: number;
+export interface ProgressiveUploaderOptionsWithApiKey extends CommonOptions, WithApiKey {
 }
 export interface ProgressiveUploadProgressEvent {
     uploadedBytes: number;
@@ -23,22 +13,13 @@ export interface ProgressiveProgressEvent {
     uploadedBytes: number;
     totalBytes: number;
 }
-export declare class ProgressiveUploader {
-    private uploadEndpoint;
-    private videoId?;
-    private retries;
-    private onProgressCallbacks;
-    private headers;
+export declare class ProgressiveUploader extends AbstractUploader<ProgressiveProgressEvent> {
     private currentPartNum;
     private currentPartBlobs;
     private currentPartBlobsSize;
     private queue;
     constructor(options: ProgressiveUploaderOptionsWithAccessToken | ProgressiveUploaderOptionsWithUploadToken | ProgressiveUploaderOptionsWithApiKey);
-    onProgress(cb: (e: ProgressiveProgressEvent) => void): void;
     uploadPart(file: Blob): Promise<void>;
     uploadLastPart(file: Blob): Promise<VideoUploadResponse>;
-    private createFormData;
-    private sleep;
     private upload;
 }
-export {};

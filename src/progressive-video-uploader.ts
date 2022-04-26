@@ -1,71 +1,41 @@
-import { apiResponseToVideoUploadResponse, DEFAULT_API_HOST, DEFAULT_RETRIES, MIN_CHUNK_SIZE, parseErrorResponse, parseUserConfig, VideoUploadResponse } from "./common";
+import { AbstractUploader, CommonOptions, MIN_CHUNK_SIZE, VideoUploadResponse, WithAccessToken, WithApiKey, WithUploadToken } from "./abstract-uploader";
 import { PromiseQueue } from "./promise-queue";
 
-export interface ProgressiveUploaderOptionsWithUploadToken extends Options {
-    uploadToken: string;
-    videoId?: string;
-}
-export interface ProgressiveUploaderOptionsWithAccessToken extends Options {
-    accessToken: string;
-    videoId: string;
-}
-export interface ProgressiveUploaderOptionsWithApiKey extends Options {
-    apiKey: string;
-    videoId: string;
-}
-interface Options {
-    apiHost?: string;
-    retries?: number;
-}
+
+export interface ProgressiveUploaderOptionsWithUploadToken extends CommonOptions, WithUploadToken { }
+export interface ProgressiveUploaderOptionsWithAccessToken extends CommonOptions, WithAccessToken { }
+export interface ProgressiveUploaderOptionsWithApiKey extends CommonOptions, WithApiKey { }
 
 export interface ProgressiveUploadProgressEvent {
     uploadedBytes: number;
     totalBytes: number;
 }
 
-
 export interface ProgressiveProgressEvent {
     uploadedBytes: number;
     totalBytes: number;
 }
 
-
-export class ProgressiveUploader {
-    private uploadEndpoint: string;
-    private videoId?: string;
-    private retries: number;
-    private onProgressCallbacks: ((e: ProgressiveProgressEvent) => void)[] = [];
-    private headers: { [name: string]: string } = {};
+export class ProgressiveUploader extends AbstractUploader<ProgressiveProgressEvent> {
     private currentPartNum = 1;
     private currentPartBlobs: Blob[] = [];
     private currentPartBlobsSize = 0;
     private queue = new PromiseQueue();
 
     constructor(options: ProgressiveUploaderOptionsWithAccessToken | ProgressiveUploaderOptionsWithUploadToken | ProgressiveUploaderOptionsWithApiKey) {
-        const parsedCondig = parseUserConfig(options);
-
-        this.uploadEndpoint = parsedCondig.uploadEndpoint;
-        this.videoId = parsedCondig.videoId;
-        if(parsedCondig.authHeader) {
-            this.headers.Authorization = parsedCondig.authHeader;
-        }
-
-        this.retries = options.retries || DEFAULT_RETRIES;
-    }
-
-    public onProgress(cb: (e: ProgressiveProgressEvent) => void) {
-        this.onProgressCallbacks.push(cb);
+        super(options);
     }
 
     public uploadPart(file: Blob): Promise<void> {
         this.currentPartBlobsSize += file.size;
         this.currentPartBlobs.push(file);
 
-        if(this.currentPartBlobsSize >= MIN_CHUNK_SIZE) {
+        if (this.currentPartBlobsSize >= MIN_CHUNK_SIZE) {
             return this.queue.add(() => {
                 const promise = this.upload(new Blob(this.currentPartBlobs)).then(res => {
                     this.videoId = res.videoId;
                 });
+                this.currentPartNum++;
                 this.currentPartBlobs = [];
                 this.currentPartBlobsSize = 0;
                 return promise;
@@ -79,68 +49,19 @@ export class ProgressiveUploader {
         return this.queue.add(() => this.upload(new Blob(this.currentPartBlobs), true));
     }
 
-    private createFormData(blob: Blob): FormData {
-        const chunk = blob;
-        const chunkForm = new FormData();
-        if (this.videoId) {
-            chunkForm.append("videoId", this.videoId);
-        }
-        chunkForm.append("file", chunk, "file");
-        return chunkForm;
-    }
-
-    private sleep(duration: number): Promise<void> {
-        return new Promise((resolve, reject) => {
-            setTimeout(() => resolve(), duration);
+    private async upload(file: Blob, isLast: boolean = false): Promise<VideoUploadResponse> {
+        const fileSize = file.size;
+        return this.xhrWithRetrier({
+            body: this.createFormData(file, "file"),
+            parts: {
+                currentPart: this.currentPartNum,
+                totalParts: isLast ? this.currentPartNum : '*'
+            },
+            onProgress: (event: ProgressEvent) => this.onProgressCallbacks.forEach(cb => cb({
+                uploadedBytes: event.loaded,
+                totalBytes: fileSize,
+            })),
         })
     }
 
-    private upload(file: Blob, isLast: boolean = false): Promise<VideoUploadResponse> {
-        const doUpload = (partNum: number): Promise<VideoUploadResponse> => new Promise((resolve, reject) => {
-            const fileSize = file.size;
-
-            const contentRange = `part ${partNum}/${isLast ? partNum : '*'}`;
-
-            const xhr = new window.XMLHttpRequest();
-            xhr.open("POST", `${this.uploadEndpoint}`, true);
-            xhr.setRequestHeader("Content-Range", contentRange);
-            for (const headerName of Object.keys(this.headers)) {
-                xhr.setRequestHeader(headerName, this.headers[headerName]);
-            }
-            xhr.onreadystatechange = (_) => {
-                if (xhr.readyState === 4) { // DONE
-                    if (xhr.status >= 400) {
-                        reject(parseErrorResponse(xhr));
-                    }
-                }
-            };
-            xhr.onload = (_) => resolve(apiResponseToVideoUploadResponse(xhr.response))
-            xhr.upload.onprogress = (e) => this.onProgressCallbacks.forEach(cb => cb({
-                uploadedBytes: e.loaded,
-                totalBytes: fileSize,
-            }));
-            xhr.send(this.createFormData(file));
-        });
-
-        return new Promise(async (resolve, reject) => {
-            let response;
-            let retriesCount = 0;
-            const thisPart = this.currentPartNum;
-            this.currentPartNum++;
-            while(true) {
-                try {
-                    response = await doUpload(thisPart);
-                    resolve(response);
-                    return;
-                } catch (e: any) {
-                    if(e.status !== 401 && retriesCount >= this.retries) {
-                        reject(e);
-                        return;
-                    }
-                    await this.sleep(200 + retriesCount * 500);
-                    retriesCount++;
-                }
-            }
-        });
-    }
 }

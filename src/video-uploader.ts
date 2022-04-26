@@ -1,24 +1,13 @@
-import { apiResponseToVideoUploadResponse, DEFAULT_API_HOST, DEFAULT_CHUNK_SIZE, DEFAULT_RETRIES, MAX_CHUNK_SIZE, MIN_CHUNK_SIZE, parseErrorResponse, parseUserConfig, VideoUploadError, VideoUploadResponse } from "./common";
-import { PromiseQueue } from "./promise-queue";
+import { AbstractUploader, CommonOptions, DEFAULT_CHUNK_SIZE, MAX_CHUNK_SIZE, MIN_CHUNK_SIZE, VideoUploadResponse, WithAccessToken, WithApiKey, WithUploadToken } from "./abstract-uploader";
 
-export interface VideoUploaderOptionsWithUploadToken extends Options {
-    uploadToken: string;
-    videoId?: string;
-}
-export interface VideoUploaderOptionsWithAccessToken extends Options {
-    accessToken: string;
-    videoId: string;
-}
-export interface VideoUploaderOptionsWithApiKey extends Options {
-    apiKey: string;
-    videoId: string;
-}
-interface Options {
+interface UploadOptions {
     file: File;
     chunkSize?: number;
-    apiHost?: string;
-    retries?: number;
 }
+
+export interface VideoUploaderOptionsWithUploadToken extends CommonOptions, UploadOptions, WithUploadToken { }
+export interface VideoUploaderOptionsWithAccessToken extends CommonOptions, UploadOptions, WithAccessToken { }
+export interface VideoUploaderOptionsWithApiKey extends CommonOptions, UploadOptions, WithApiKey { }
 
 export interface UploadProgressEvent {
     uploadedBytes: number;
@@ -29,39 +18,25 @@ export interface UploadProgressEvent {
     currentChunkUploadedBytes: number;
 }
 
-export class VideoUploader {
+export class VideoUploader extends AbstractUploader<UploadProgressEvent> {
     private file: File;
     private chunkSize: number;
-    private uploadEndpoint: string;
-    private currentChunk: number = 0;
     private chunksCount: number;
     private fileSize: number;
     private fileName: string;
-    private videoId?: string;
-    private retries: number;
-    private onProgressCallbacks: ((e: UploadProgressEvent) => void)[] = [];
-    private headers: { [name: string]: string } = {};
-    private queue = new PromiseQueue();
 
     constructor(options: VideoUploaderOptionsWithAccessToken | VideoUploaderOptionsWithUploadToken | VideoUploaderOptionsWithApiKey) {
+        super(options);
+
         if (!options.file) {
             throw new Error("'file' is missing");
         }
 
-        const parsedCondig = parseUserConfig(options);
-
-        this.uploadEndpoint = parsedCondig.uploadEndpoint;
-        this.videoId = parsedCondig.videoId;
-        if(parsedCondig.authHeader) {
-            this.headers.Authorization = parsedCondig.authHeader;
-        }
-
-        if(options.chunkSize && (options.chunkSize < MIN_CHUNK_SIZE || options.chunkSize > MAX_CHUNK_SIZE)) {
+        if (options.chunkSize && (options.chunkSize < MIN_CHUNK_SIZE || options.chunkSize > MAX_CHUNK_SIZE)) {
             throw new Error(`Invalid chunk size. Minimal allowed value: ${MIN_CHUNK_SIZE / 1024 / 1024}MB, maximum allowed value: ${MAX_CHUNK_SIZE / 1024 / 1024}MB.`);
         }
 
         this.chunkSize = options.chunkSize || DEFAULT_CHUNK_SIZE;
-        this.retries = options.retries || DEFAULT_RETRIES;
         this.file = options.file;
         this.fileSize = this.file.size;
         this.fileName = this.file.name;
@@ -69,82 +44,40 @@ export class VideoUploader {
         this.chunksCount = Math.ceil(this.fileSize / this.chunkSize);
     }
 
-    public onProgress(cb: (e: UploadProgressEvent) => void) {
-        this.onProgressCallbacks.push(cb);
-    }
 
-    public upload(): Promise<VideoUploadResponse> {
-        return this.queue.add(() => new Promise(async (resolve, reject) => {
-            let response;
-            let retriesCount = 0;
-            while (this.currentChunk < this.chunksCount) {
-                try {
-                    response = await this.uploadCurrentChunk();
-                    this.videoId = response.videoId;
-                    this.currentChunk++;
-
-                } catch (e: any) {
-                    if (e.status === 401 || retriesCount >= this.retries) {
-                        reject(e);
-                        return;
-                    }
-                    await this.sleep(200 + retriesCount * 500);
-                    retriesCount++;
-                }
-            }
-
-            resolve(apiResponseToVideoUploadResponse(response));
-        }));
-    }
-
-    private sleep(duration: number): Promise<void> {
-        return new Promise((resolve, reject) => {
-            setTimeout(() => resolve(), duration);
-        })
-    }
-
-    private createFormData(startByte: number, endByte: number): FormData {
-        const chunk = this.file.slice(startByte, endByte);
-        const chunkForm = new FormData();
-        if (this.videoId) {
-            chunkForm.append("videoId", this.videoId);
+    public async upload(): Promise<VideoUploadResponse> {
+        let res: VideoUploadResponse;
+        for(let i = 0; i < this.chunksCount; i++) {
+            res = await this.uploadCurrentChunk(i);
+            this.videoId = res.videoId;
         }
-        chunkForm.append("file", chunk, this.fileName);
-        return chunkForm;
+        return res!;
     }
 
-    private uploadCurrentChunk(): Promise<any> {
-        return new Promise((resolve, reject) => {
-            const firstByte = this.currentChunk * this.chunkSize;
-            const computedLastByte = (this.currentChunk + 1) * this.chunkSize;
-            const lastByte = (computedLastByte > this.fileSize ? this.fileSize : computedLastByte);
-            const chunksCount = Math.ceil(this.fileSize / this.chunkSize);
+    private uploadCurrentChunk(chunkNumber: number): Promise<VideoUploadResponse> {
+        const firstByte = chunkNumber * this.chunkSize;
+        const computedLastByte = (chunkNumber + 1) * this.chunkSize;
+        const lastByte = (computedLastByte > this.fileSize ? this.fileSize : computedLastByte);
+        const chunksCount = Math.ceil(this.fileSize / this.chunkSize);
 
-            const contentRange = `part ${this.currentChunk + 1}/${chunksCount}`;
-
-            const xhr = new window.XMLHttpRequest();
-            xhr.open("POST", `${this.uploadEndpoint}`, true);
-            xhr.setRequestHeader("Content-Range", contentRange);
-            for (const headerName of Object.keys(this.headers)) {
-                xhr.setRequestHeader(headerName, this.headers[headerName]);
-            }
-            xhr.onreadystatechange = (_) => {
-                if (xhr.readyState === 4) { // DONE
-                    if (xhr.status >= 400) {
-                        reject(parseErrorResponse(xhr));
-                    }
-                }
-            };
-            xhr.onload = (_) => resolve(JSON.parse(xhr.response));
-            xhr.upload.onprogress = (e) => this.onProgressCallbacks.forEach(cb => cb({
-                uploadedBytes: e.loaded + firstByte,
+        const progressEventToUploadProgressEvent = (event: ProgressEvent): UploadProgressEvent => {
+            return {
+                uploadedBytes: event.loaded + firstByte,
                 totalBytes: this.fileSize,
                 chunksCount: this.chunksCount,
                 chunksBytes: this.chunkSize,
-                currentChunk: this.currentChunk + 1,
-                currentChunkUploadedBytes: e.loaded,
-            }));
-            xhr.send(this.createFormData(firstByte, lastByte));
+                currentChunk: chunkNumber + 1,
+                currentChunkUploadedBytes: event.loaded,
+            };
+        };
+
+        return this.xhrWithRetrier({
+            onProgress: (event) => this.onProgressCallbacks.forEach(cb => cb(progressEventToUploadProgressEvent(event))),
+            body: this.createFormData(this.file, this.fileName, firstByte, lastByte),
+            parts: {
+                currentPart: chunkNumber + 1,
+                totalParts: chunksCount
+            }
         });
     }
 }

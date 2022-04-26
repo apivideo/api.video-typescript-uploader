@@ -1,21 +1,13 @@
-import { VideoUploadResponse } from "./common";
-export interface VideoUploaderOptionsWithUploadToken extends Options {
-    uploadToken: string;
-    videoId?: string;
-}
-export interface VideoUploaderOptionsWithAccessToken extends Options {
-    accessToken: string;
-    videoId: string;
-}
-export interface VideoUploaderOptionsWithApiKey extends Options {
-    apiKey: string;
-    videoId: string;
-}
-interface Options {
+import { AbstractUploader, CommonOptions, VideoUploadResponse, WithAccessToken, WithApiKey, WithUploadToken } from "./abstract-uploader";
+interface UploadOptions {
     file: File;
     chunkSize?: number;
-    apiHost?: string;
-    retries?: number;
+}
+export interface VideoUploaderOptionsWithUploadToken extends CommonOptions, UploadOptions, WithUploadToken {
+}
+export interface VideoUploaderOptionsWithAccessToken extends CommonOptions, UploadOptions, WithAccessToken {
+}
+export interface VideoUploaderOptionsWithApiKey extends CommonOptions, UploadOptions, WithApiKey {
 }
 export interface UploadProgressEvent {
     uploadedBytes: number;
@@ -25,24 +17,14 @@ export interface UploadProgressEvent {
     currentChunk: number;
     currentChunkUploadedBytes: number;
 }
-export declare class VideoUploader {
+export declare class VideoUploader extends AbstractUploader<UploadProgressEvent> {
     private file;
     private chunkSize;
-    private uploadEndpoint;
-    private currentChunk;
     private chunksCount;
     private fileSize;
     private fileName;
-    private videoId?;
-    private retries;
-    private onProgressCallbacks;
-    private headers;
-    private queue;
     constructor(options: VideoUploaderOptionsWithAccessToken | VideoUploaderOptionsWithUploadToken | VideoUploaderOptionsWithApiKey);
-    onProgress(cb: (e: UploadProgressEvent) => void): void;
     upload(): Promise<VideoUploadResponse>;
-    private sleep;
-    private createFormData;
     private uploadCurrentChunk;
 }
 export {};

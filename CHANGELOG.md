@@ -1,6 +1,10 @@
 # Changelog
 All changes to this project will be documented in this file.
 
+## [1.0.8] - 2022-04-27
+- Create a AbstractUploader
+- Add origin header
+
 ## [1.0.7] - 2022-04-26
 - Don't retry on 401 errors
 - Mutualize some code
