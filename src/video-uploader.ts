@@ -102,8 +102,8 @@ export class VideoUploader {
                     this.videoId = response.videoId;
                     this.currentChunk++;
 
-                } catch (e) {
-                    if (retriesCount >= this.retries) {
+                } catch (e: any) {
+                    if (e.status === 401 || retriesCount >= this.retries) {
                         reject(e);
                         return;
                     }

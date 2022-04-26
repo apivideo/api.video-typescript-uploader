@@ -151,8 +151,8 @@ export class ProgressiveUploader {
                     response = await doUpload(thisPart);
                     resolve(response);
                     return;
-                } catch (e) {
-                    if(retriesCount >= this.retries) {
+                } catch (e: any) {
+                    if(e.status !== 401 && retriesCount >= this.retries) {
                         reject(e);
                         return;
                     }
