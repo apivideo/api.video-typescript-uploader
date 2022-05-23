@@ -2,7 +2,6 @@ import { expect } from 'chai';
 import mock from 'xhr-mock';
 import { VideoUploader, UploadProgressEvent } from '../src/index';
 
-
 describe('Instanciation', () => {
     it('throws if required param is missing', () => {
         // @ts-ignore
@@ -85,6 +84,58 @@ describe('Access token auth', () => {
 
     });
 });
+
+
+describe('Refresh token', () => {
+    beforeEach(() => mock.setup());
+    afterEach(() => mock.teardown());
+
+    it('refresh token value is correct', (done) => {
+        const accessToken1 = "1234";
+        const accessToken2 = "5678";
+        const refreshToken1 = "9876";
+        const refreshToken2 = "5432";
+        const videoId = "9876";
+
+        const uploader = new VideoUploader({
+            file: new File([new ArrayBuffer(200)], "filename"),
+            accessToken: accessToken1,
+            refreshToken: refreshToken1,
+            videoId,
+        });
+
+        let sourceCalls = 0;
+
+        mock.post(`https://ws.api.video/videos/${videoId}/source`, (req, res) => {
+            sourceCalls++;
+            expect(req.header("content-range")).to.be.eq("part 1/1");
+
+            if(sourceCalls === 1) {
+                expect(req.header("authorization")).to.be.eq(`Bearer ${accessToken1}`);
+                return res.status(401).body("{}");
+            }
+
+            expect(req.header("authorization")).to.be.eq(`Bearer ${accessToken2}`);
+            return res.status(201).body("{}");
+        });
+
+        mock.post(`https://ws.api.video/auth/refresh`, (req, res) => {
+
+            expect(JSON.parse(req.body()).refreshToken).to.be.eq(refreshToken1);
+            return res.status(201).body(JSON.stringify({
+                access_token: accessToken2,
+                refresh_token: refreshToken2,
+            }));
+        });
+
+
+        uploader.upload().then(() => {
+            done();
+        });
+
+    });
+});
+
 
 describe('Delegated upload', () => {
     beforeEach(() => mock.setup());

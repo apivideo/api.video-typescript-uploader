@@ -155,11 +155,12 @@ Using delegated upload tokens for authentication is best options when uploading 
 **Warning**: be aware that exposing your access token client-side can lead to huge security issues. Use this method only if you know what you're doing :).
 
 
-|                   Option name | Mandatory | Type   | Description             |
-| ----------------------------: | --------- | ------ | ----------------------- |
-|                   accessToken | **yes**   | string | your access token       |
-|                       videoId | **yes**   | string | id of an existing video |
-| _common options (see bellow)_ |           |        |                         |
+|                   Option name | Mandatory | Type   | Description                                                                                                                                     |
+| ----------------------------: | --------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+|                   accessToken | **yes**   | string | your access token                                                                                                                               |
+|                  refreshToken | **no**    | string | your refresh token (please not that if you don't provide a refresh token, your upload may fails due to the access token lifetime of 60 minutes) |
+|                       videoId | **yes**   | string | id of an existing video                                                                                                                         |
+| _common options (see bellow)_ |           |        |                                                                                                                                                 |
 
 
 #### Using an API key (**strongly** discouraged):
