@@ -1,0 +1,23 @@
+<html>
+    <head>
+        <script src="../dist/index.js"></script>
+    </head>
+    <body>
+
+        <form>
+            <input type="file" id="input" onchange="uploadFile(this.files)">
+        </form>
+        <script type="text/javascript">
+            function uploadFile(files) {
+                const uploader = new VideoUploader({
+                    file: files[0],
+                    videoId: "vi7Wub9QiEDdkMd5CZmnrD1Y",
+                    accessToken: "1ZeyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE2NTMzMTAwMzIuMzE4MzgyLCJuYmYiOjE2NTMzMTAwMzIuMzE4MzgyLCJleHAiOjE2NTMzMTM2MzIuMzE4MzgyLCJhcGlLZXlWYWx1ZSI6IjNYbUwxTXE0NkxQUmNnazVDTW1lMmZCc0liWU1LWGJRSVg1RHJUa0NPamcifQ.MCGVn1CrdEnKL_b-3MGuNTdb3y-IoUCwoikzIQEzWIyJgsz7338UJ_yYF0njGXJFjjhOWz3M_ywyVkr5E1Vx0K8RExq5gUEvehmBERkoOtPjYLxvIsKCms7mml_cPBWuh21-ofxNKH1W58AhP8uvvNTqSSKgeh01abOr8gpyaR8cgqAEcFjkcko0LULAEb44mCmiBMBwJAAfh4iuAyyqLQO1TC63ev92xAhWyKJY23npHfAkzpE_F8HpCp6VbAQwZdZ6Tmsg2lj4kMFgvZi2EiaUZuW5RS5rkq4uBTmuOBNNTqwtuSl0bYcp-NBQ4W2Ubc_Kw04_2KcIkn4O1NEwbw",
+                    refreshToken: "1eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE2NTMzMTE3MDMuMzE5NTcyLCJuYmYiOjE2NTMzMTE3MDMuMzE5NTcyLCJleHAiOjE2NTU5OTAxMDMuMzE5NTcyLCJyZWZyZXNoVG9rZW4iOnRydWUsImFwaUtleVZhbHVlIjoiM1htTDFNcTQ2TFBSY2drNUNNbWUyZkJzSWJZTUtYYlFJWDVEclRrQ09qZyJ9.soMScSuENRqqrIIOXdDnevDc1iNbl9Qcow71D6bOn4f9corRQhHgRwhOpKNoVAYX-SbbAgd1rbjiG95YgFLB9avDvCxqtW-7m_YVylywpGXOoaoz7wJSS2isB794_NYq6vAlivX22MB9aeA84JzwEZyajIOcwCJ-eOG-JbrW6kAtjW2Fl2I6rGIc6qQidYFSidZYI16p88aV-_-fHk8wV70B2Wb7CNOjrFeR51aIgtqeA-oheluRUwb0_3z5fgSTOy03CtOriloNSf9kGexvACnu1sIJ10D2cbHJshPv7djlQn8doGxhzoMpN7qy9MifO7KY5VFer_hQD0FuNFr5YQ"
+                });
+                
+                uploader.upload().catch(e => console.log(e));
+            }
+        </script>
+    </body>
+</html>

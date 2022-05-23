@@ -39,6 +39,7 @@ export interface WithUploadToken {
 }
 export interface WithAccessToken {
     accessToken: string;
+    refreshToken?: string;
     videoId: string;
 }
 export interface WithApiKey {
@@ -68,6 +69,8 @@ export declare abstract class AbstractUploader<T> {
         [name: string]: string;
     };
     protected onProgressCallbacks: ((e: T) => void)[];
+    protected refreshToken?: string;
+    protected apiHost: string;
     constructor(options: CommonOptions & (WithAccessToken | WithUploadToken | WithApiKey));
     onProgress(cb: (e: T) => void): void;
     protected parseErrorResponse(xhr: XMLHttpRequest): VideoUploadError;
@@ -75,6 +78,7 @@ export declare abstract class AbstractUploader<T> {
     protected sleep(duration: number): Promise<void>;
     protected xhrWithRetrier(params: HXRRequestParams): Promise<VideoUploadResponse>;
     protected createFormData(file: Blob, fileName: string, startByte?: number, endByte?: number): FormData;
+    doRefreshToken(): Promise<void>;
     private createXhrPromise;
     private withRetrier;
 }

@@ -43,6 +43,7 @@ export interface WithUploadToken {
 
 export interface WithAccessToken {
     accessToken: string;
+    refreshToken?: string;
     videoId: string;
 }
 
@@ -71,7 +72,7 @@ type HXRRequestParams = {
 let PACKAGE_VERSION = "";
 try {
     // @ts-ignore
-    PACKAGE_VERSION= __PACKAGE_VERSION__ || "";
+    PACKAGE_VERSION = __PACKAGE_VERSION__ || "";
 } catch (e) {
     // ignore
 }
@@ -82,30 +83,33 @@ export abstract class AbstractUploader<T> {
     protected retries: number;
     protected headers: { [name: string]: string } = {};
     protected onProgressCallbacks: ((e: T) => void)[] = [];
+    protected refreshToken?: string;
+    protected apiHost: string;
 
     constructor(options: CommonOptions & (WithAccessToken | WithUploadToken | WithApiKey)) {
-        const apiHost = options.apiHost || DEFAULT_API_HOST;
+        this.apiHost = options.apiHost || DEFAULT_API_HOST;
 
         if (options.hasOwnProperty("uploadToken")) {
             const optionsWithUploadToken = options as WithUploadToken;
             if (optionsWithUploadToken.videoId) {
                 this.videoId = optionsWithUploadToken.videoId;
             }
-            this.uploadEndpoint = `https://${apiHost}/upload?token=${optionsWithUploadToken.uploadToken}`;
+            this.uploadEndpoint = `https://${this.apiHost}/upload?token=${optionsWithUploadToken.uploadToken}`;
 
         } else if (options.hasOwnProperty("accessToken")) {
             const optionsWithAccessToken = options as WithAccessToken;
             if (!optionsWithAccessToken.videoId) {
                 throw new Error("'videoId' is missing");
             }
-            this.uploadEndpoint = `https://${apiHost}/videos/${optionsWithAccessToken.videoId}/source`;
+            this.refreshToken = optionsWithAccessToken.refreshToken;
+            this.uploadEndpoint = `https://${this.apiHost}/videos/${optionsWithAccessToken.videoId}/source`;
             this.headers.Authorization = `Bearer ${optionsWithAccessToken.accessToken}`;
         } else if (options.hasOwnProperty("apiKey")) {
             const optionsWithApiKey = options as WithApiKey;
             if (!optionsWithApiKey.videoId) {
                 throw new Error("'videoId' is missing");
             }
-            this.uploadEndpoint = `https://${apiHost}/videos/${optionsWithApiKey.videoId}/source`;
+            this.uploadEndpoint = `https://${this.apiHost}/videos/${optionsWithApiKey.videoId}/source`;
             this.headers.Authorization = `Basic ${btoa(optionsWithApiKey.apiKey + ":")}`;
         } else {
             throw new Error(`You must provide either an accessToken, an uploadToken or an API key`);
@@ -173,7 +177,31 @@ export abstract class AbstractUploader<T> {
         return chunkForm;
     }
 
+    public doRefreshToken(): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const xhr = new window.XMLHttpRequest();
+            xhr.open("POST", `https://${this.apiHost}/auth/refresh`);
 
+            xhr.onreadystatechange = (_) => {
+                if (xhr.readyState === 4 && xhr.status >= 400) {
+                    reject(this.parseErrorResponse(xhr));
+                }
+            }
+            xhr.onload = (_) => {
+                const response = JSON.parse(xhr.response);
+                if (response.refresh_token && response.access_token) {
+                    this.headers.Authorization = `Bearer ${response.access_token}`;
+                    this.refreshToken = response.refresh_token;
+                    resolve();
+                    return;
+                }
+                reject(this.parseErrorResponse(xhr));
+            };
+            xhr.send(JSON.stringify({
+                refreshToken: this.refreshToken
+            }));
+        });
+    }
     private createXhrPromise(params: HXRRequestParams): Promise<VideoUploadResponse> {
         return new Promise((resolve, reject) => {
             const xhr = new window.XMLHttpRequest();
@@ -189,14 +217,21 @@ export abstract class AbstractUploader<T> {
             }
             xhr.onreadystatechange = (_) => {
                 if (xhr.readyState === 4) { // DONE
-                    if (xhr.status >= 400) {
+                    if (xhr.status === 401 && this.refreshToken) {
+                        return this.doRefreshToken()
+                            .then(() => this.createXhrPromise(params))
+                            .then(res => resolve(res))
+                            .catch((e) => reject(e));
+                    } else if (xhr.status >= 400) {
                         reject(this.parseErrorResponse(xhr));
                         return;
                     }
                 }
             };
             xhr.onload = (_) => {
-                resolve(this.apiResponseToVideoUploadResponse(JSON.parse(xhr.response)));
+                if(xhr.status < 400) {
+                    resolve(this.apiResponseToVideoUploadResponse(JSON.parse(xhr.response)));
+                }
             };
             xhr.send(params.body);
         });
@@ -211,7 +246,7 @@ export abstract class AbstractUploader<T> {
                     resolve(res);
                     return;
                 } catch (e: any) {
-                    if (e.status !== 401 && retriesCount >= this.retries) {
+                    if (e.status === 401 || retriesCount >= this.retries) {
                         reject(e);
                         return;
                     }
