@@ -276,10 +276,11 @@ Using delegated upload tokens for authentication is best options when uploading 
 #### Common options
 
 
-| Option name | Mandatory | Type   | Description                                           |
-| ----------: | --------- | ------ | ----------------------------------------------------- |
-|     apiHost | no        | string | api.video host (default: ws.api.video)                |
-|     retries | no        | number | number of retries when an API call fails (default: 5) |
+|       Option name | Mandatory | Type    | Description                                                                                                                                      |
+| ----------------: | --------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+|           apiHost | no        | string  | api.video host (default: ws.api.video)                                                                                                           |
+|           retries | no        | number  | number of retries when an API call fails (default: 5)                                                                                            |
+| preventEmptyParts | no        | boolean | if true, the upload will succeed even if an empty Blob is passed to uploadLastPart(). This may alter performances a bit in some cases (default: false) |
 
 
 ### Example

@@ -69,6 +69,36 @@ describe('Content-range', () => {
     });
 });
 
+describe('Prevent empty part', () => {
+    beforeEach(() => mock.setup());
+    afterEach(() => mock.teardown());
+
+    it('content-range headers are properly set', async () => {
+        const uploadToken = "the-upload-token";
+
+        const uploader = new ProgressiveUploader({uploadToken, preventEmptyParts: true});
+
+        const expectedRanges = [
+            'part 1/*',
+            'part 2/*',
+            'part 3/3',
+        ];
+
+        mock.post(`https://ws.api.video/upload?token=${uploadToken}`, (req, res) => {
+            expect(req.header("content-range")).to.be.eq(expectedRanges.shift());
+            return res.status(201).body("{}");
+        });
+
+        await uploader.uploadPart(new File([new ArrayBuffer(5*1024*1024)], "filename"));
+        await uploader.uploadPart(new File([new ArrayBuffer(5*1024*1024)], "filename"));
+        await uploader.uploadPart(new File([new ArrayBuffer(3*1024*1024)], "filename"));
+        await uploader.uploadLastPart(new Blob());
+
+        expect(expectedRanges).has.lengthOf(0);
+    });
+});
+
+
 describe('Access token auth', () => {
     beforeEach(() => mock.setup());
     afterEach(() => mock.teardown());
