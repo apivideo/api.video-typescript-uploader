@@ -1,10 +1,13 @@
 import { AbstractUploader, CommonOptions, MIN_CHUNK_SIZE, VideoUploadResponse, WithAccessToken, WithApiKey, WithUploadToken } from "./abstract-uploader";
 import { PromiseQueue } from "./promise-queue";
 
+export interface ProgressiveUploadCommonOptions {
+    preventEmptyParts?: boolean;
+}
 
-export interface ProgressiveUploaderOptionsWithUploadToken extends CommonOptions, WithUploadToken { }
-export interface ProgressiveUploaderOptionsWithAccessToken extends CommonOptions, WithAccessToken { }
-export interface ProgressiveUploaderOptionsWithApiKey extends CommonOptions, WithApiKey { }
+export interface ProgressiveUploaderOptionsWithUploadToken extends ProgressiveUploadCommonOptions, CommonOptions, WithUploadToken { }
+export interface ProgressiveUploaderOptionsWithAccessToken extends ProgressiveUploadCommonOptions, CommonOptions, WithAccessToken { }
+export interface ProgressiveUploaderOptionsWithApiKey extends ProgressiveUploadCommonOptions, CommonOptions, WithApiKey { }
 
 export interface ProgressiveUploadProgressEvent {
     uploadedBytes: number;
@@ -21,24 +24,40 @@ export class ProgressiveUploader extends AbstractUploader<ProgressiveProgressEve
     private currentPartBlobs: Blob[] = [];
     private currentPartBlobsSize = 0;
     private queue = new PromiseQueue();
+    private preventEmptyParts: boolean;
 
     constructor(options: ProgressiveUploaderOptionsWithAccessToken | ProgressiveUploaderOptionsWithUploadToken | ProgressiveUploaderOptionsWithApiKey) {
         super(options);
+        this.preventEmptyParts = options.preventEmptyParts || false;
     }
 
     public uploadPart(file: Blob): Promise<void> {
         this.currentPartBlobsSize += file.size;
         this.currentPartBlobs.push(file);
 
-        if (this.currentPartBlobsSize >= MIN_CHUNK_SIZE) {
-            return this.queue.add(() => {
-                const promise = this.upload(new Blob(this.currentPartBlobs)).then(res => {
-                    this.videoId = res.videoId;
-                });
-                this.currentPartNum++;
+        if ((this.preventEmptyParts && (this.currentPartBlobsSize - file.size >= MIN_CHUNK_SIZE))
+            || (!this.preventEmptyParts && (this.currentPartBlobsSize >= MIN_CHUNK_SIZE))) {
+
+            let toSend: any[];
+            if(this.preventEmptyParts) {
+                toSend = this.currentPartBlobs.slice(0, -1);
+                this.currentPartBlobs = this.currentPartBlobs.slice(-1);
+                this.currentPartBlobsSize = this.currentPartBlobs.length === 0 ? 0 : this.currentPartBlobs[0].size;
+            } else {
+                toSend = this.currentPartBlobs;
                 this.currentPartBlobs = [];
                 this.currentPartBlobsSize = 0;
-                return promise;
+            }
+
+            return this.queue.add(() => {
+                if (toSend.length > 0) {
+                    const promise = this.upload(new Blob(toSend)).then(res => {
+                        this.videoId = res.videoId;
+                    });
+                    this.currentPartNum++;
+                    return promise;
+                }
+                return new Promise(resolve => resolve());
             });
         }
         return Promise.resolve();
