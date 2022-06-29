@@ -1,7 +1,7 @@
 export declare const MIN_CHUNK_SIZE: number;
 export declare const DEFAULT_CHUNK_SIZE: number;
 export declare const MAX_CHUNK_SIZE: number;
-export declare const DEFAULT_RETRIES = 5;
+export declare const DEFAULT_RETRIES = 6;
 export declare const DEFAULT_API_HOST = "ws.api.video";
 export declare type VideoUploadResponse = {
     readonly videoId: string;
@@ -29,9 +29,11 @@ export declare type VideoUploadResponse = {
         readonly thumbnail?: string;
     };
 };
+declare type RetryStrategy = (retryCount: number, error: VideoUploadError) => number | null;
 export interface CommonOptions {
     apiHost?: string;
     retries?: number;
+    retryStrategy?: RetryStrategy;
 }
 export interface WithUploadToken {
     uploadToken: string;
@@ -47,7 +49,7 @@ export interface WithApiKey {
     videoId: string;
 }
 export declare type VideoUploadError = {
-    status: number;
+    status?: number;
     type?: string;
     title?: string;
     reason?: string;
@@ -61,6 +63,7 @@ declare type HXRRequestParams = {
     onProgress?: (e: ProgressEvent) => void;
     body: Document | XMLHttpRequestBodyInit | null;
 };
+export declare const DEFAULT_RETRY_STRATEGY: (maxRetries: number) => (retryCount: number, error: VideoUploadError) => number | null;
 export declare abstract class AbstractUploader<T> {
     protected uploadEndpoint: string;
     protected videoId?: string;
@@ -71,6 +74,7 @@ export declare abstract class AbstractUploader<T> {
     protected onProgressCallbacks: ((e: T) => void)[];
     protected refreshToken?: string;
     protected apiHost: string;
+    protected retryStrategy: RetryStrategy;
     constructor(options: CommonOptions & (WithAccessToken | WithUploadToken | WithApiKey));
     onProgress(cb: (e: T) => void): void;
     protected parseErrorResponse(xhr: XMLHttpRequest): VideoUploadError;

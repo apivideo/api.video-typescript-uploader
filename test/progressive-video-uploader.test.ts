@@ -22,7 +22,7 @@ describe('Requests synchronization', () => {
 
     it('requests are made sequentially', (done) => {
         const uploadToken = "the-upload-token";
-        const uploader = new ProgressiveUploader({uploadToken});
+        const uploader = new ProgressiveUploader({ uploadToken });
 
         let isRequesting = false;
 
@@ -35,9 +35,9 @@ describe('Requests synchronization', () => {
             }, 500));
         });
 
-        uploader.uploadPart(new File([new ArrayBuffer(5*1024*1024)], "filename"));
-        uploader.uploadPart(new File([new ArrayBuffer(5*1024*1024)], "filename"));
-        uploader.uploadLastPart(new File([new ArrayBuffer(3*1024*1024)], "filename")).then((r) => done());
+        uploader.uploadPart(new File([new ArrayBuffer(5 * 1024 * 1024)], "filename"));
+        uploader.uploadPart(new File([new ArrayBuffer(5 * 1024 * 1024)], "filename"));
+        uploader.uploadLastPart(new File([new ArrayBuffer(3 * 1024 * 1024)], "filename")).then((r) => done());
     });
 });
 
@@ -48,7 +48,7 @@ describe('Content-range', () => {
     it('content-range headers are properly set', async () => {
         const uploadToken = "the-upload-token";
 
-        const uploader = new ProgressiveUploader({uploadToken});
+        const uploader = new ProgressiveUploader({ uploadToken });
 
         const expectedRanges = [
             'part 1/*',
@@ -61,9 +61,9 @@ describe('Content-range', () => {
             return res.status(201).body("{}");
         });
 
-        await uploader.uploadPart(new File([new ArrayBuffer(5*1024*1024)], "filename"));
-        await uploader.uploadPart(new File([new ArrayBuffer(5*1024*1024)], "filename"));
-        await uploader.uploadLastPart(new File([new ArrayBuffer(3*1024*1024)], "filename"));
+        await uploader.uploadPart(new File([new ArrayBuffer(5 * 1024 * 1024)], "filename"));
+        await uploader.uploadPart(new File([new ArrayBuffer(5 * 1024 * 1024)], "filename"));
+        await uploader.uploadLastPart(new File([new ArrayBuffer(3 * 1024 * 1024)], "filename"));
 
         expect(expectedRanges).has.lengthOf(0);
     });
@@ -76,7 +76,7 @@ describe('Prevent empty part', () => {
     it('content-range headers are properly set', async () => {
         const uploadToken = "the-upload-token";
 
-        const uploader = new ProgressiveUploader({uploadToken, preventEmptyParts: true});
+        const uploader = new ProgressiveUploader({ uploadToken, preventEmptyParts: true });
 
         const expectedRanges = [
             'part 1/*',
@@ -89,9 +89,9 @@ describe('Prevent empty part', () => {
             return res.status(201).body("{}");
         });
 
-        await uploader.uploadPart(new File([new ArrayBuffer(5*1024*1024)], "filename"));
-        await uploader.uploadPart(new File([new ArrayBuffer(5*1024*1024)], "filename"));
-        await uploader.uploadPart(new File([new ArrayBuffer(3*1024*1024)], "filename"));
+        await uploader.uploadPart(new File([new ArrayBuffer(5 * 1024 * 1024)], "filename"));
+        await uploader.uploadPart(new File([new ArrayBuffer(5 * 1024 * 1024)], "filename"));
+        await uploader.uploadPart(new File([new ArrayBuffer(3 * 1024 * 1024)], "filename"));
         await uploader.uploadLastPart(new Blob());
 
         expect(expectedRanges).has.lengthOf(0);
@@ -144,7 +144,7 @@ describe('Progress listener', () => {
 
         uploader.onProgress((e: ProgressiveUploadProgressEvent) => lastUploadProgressEvent = e);
 
-        uploader.uploadPart(new File([new ArrayBuffer(5*1024*1024)], "filename")).then(() => {
+        uploader.uploadPart(new File([new ArrayBuffer(5 * 1024 * 1024)], "filename")).then(() => {
             expect(lastUploadProgressEvent).to.deep.equal({
                 ...lastUploadProgressEvent,
                 totalBytes: 5242880
@@ -162,7 +162,10 @@ describe('Errors & retries', () => {
 
         const uploadToken = "the-upload-token";
 
-        const uploader = new ProgressiveUploader({ uploadToken });
+        const uploader = new ProgressiveUploader({
+            uploadToken,
+            retryStrategy: (retryCount, error) => retryCount > 3 ? null : 10,
+        });
 
         let postCounts = 0;
         mock.post(`https://ws.api.video/upload?token=${uploadToken}`, (req, res) => {
@@ -173,7 +176,7 @@ describe('Errors & retries', () => {
             return res.status(500).body('{"error": "oups"}');
         });
 
-        uploader.uploadPart(new File([new ArrayBuffer(5*1024*1024)], "filename")).then(() => {
+        uploader.uploadPart(new File([new ArrayBuffer(5 * 1024 * 1024)], "filename")).then(() => {
             expect(postCounts).to.be.eq(3);
             done();
         });
@@ -185,14 +188,14 @@ describe('Errors & retries', () => {
 
         const uploader = new ProgressiveUploader({
             uploadToken,
-            retries: 3,
+            retryStrategy: (retryCount, error) => retryCount > 3 ? null : 10,
         });
 
         mock.post(`https://ws.api.video/upload?token=${uploadToken}`, (req, res) => {
             return res.status(500).body('{"error": "oups"}');
         });
 
-        uploader.uploadPart(new File([new ArrayBuffer(5*1024*1024)], "filename")).then(() => {
+        uploader.uploadPart(new File([new ArrayBuffer(5 * 1024 * 1024)], "filename")).then(() => {
             throw new Error('should not succeed');
         }).catch((e) => {
             expect(e).to.be.eqls({ status: 500, raw: '{"error": "oups"}', error: 'oups' });
