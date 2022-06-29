@@ -1,7 +1,7 @@
 export const MIN_CHUNK_SIZE = 1024 * 1024 * 5; // 5mb
 export const DEFAULT_CHUNK_SIZE = 1024 * 1024 * 50; // 50mb
 export const MAX_CHUNK_SIZE = 1024 * 1024 * 128; // 128mb
-export const DEFAULT_RETRIES = 5;
+export const DEFAULT_RETRIES = 6;
 export const DEFAULT_API_HOST = "ws.api.video";
 
 export declare type VideoUploadResponse = {
@@ -31,9 +31,12 @@ export declare type VideoUploadResponse = {
     };
 };
 
+type RetryStrategy = (retryCount: number, error: VideoUploadError) => number | null;
+
 export interface CommonOptions {
     apiHost?: string;
     retries?: number;
+    retryStrategy?: RetryStrategy;
 }
 
 export interface WithUploadToken {
@@ -53,7 +56,7 @@ export interface WithApiKey {
 }
 
 export type VideoUploadError = {
-    status: number;
+    status?: number;
     type?: string;
     title?: string;
     reason?: string;
@@ -77,6 +80,15 @@ try {
     // ignore
 }
 
+export const DEFAULT_RETRY_STRATEGY = (maxRetries: number) => {
+    return (retryCount: number, error: VideoUploadError) => {
+        if ((error.status && error.status >= 400 && error.status < 500) || retryCount >= maxRetries) {
+            return null;
+        }
+        return Math.floor(200 + 2000 * retryCount * (retryCount + 1));
+    }
+};
+
 export abstract class AbstractUploader<T> {
     protected uploadEndpoint: string;
     protected videoId?: string;
@@ -85,6 +97,7 @@ export abstract class AbstractUploader<T> {
     protected onProgressCallbacks: ((e: T) => void)[] = [];
     protected refreshToken?: string;
     protected apiHost: string;
+    protected retryStrategy: RetryStrategy;
 
     constructor(options: CommonOptions & (WithAccessToken | WithUploadToken | WithApiKey)) {
         this.apiHost = options.apiHost || DEFAULT_API_HOST;
@@ -116,6 +129,7 @@ export abstract class AbstractUploader<T> {
         }
         this.headers["AV-Origin-Client"] = "typescript-uploader:" + PACKAGE_VERSION;
         this.retries = options.retries || DEFAULT_RETRIES;
+        this.retryStrategy = options.retryStrategy || DEFAULT_RETRY_STRATEGY(this.retries);
     }
 
     public onProgress(cb: (e: T) => void) {
@@ -228,8 +242,22 @@ export abstract class AbstractUploader<T> {
                     }
                 }
             };
+            xhr.onerror = (e) => {
+                reject({
+                    status: undefined,
+                    raw: undefined,
+                    reason: "NETWORK_ERROR",
+                });
+            }
+            xhr.ontimeout = (e) => {
+                reject({
+                    status: undefined,
+                    raw: undefined,
+                    reason: "NETWORK_TIMEOUT",
+                });
+            }
             xhr.onload = (_) => {
-                if(xhr.status < 400) {
+                if (xhr.status < 400) {
                     resolve(this.apiResponseToVideoUploadResponse(JSON.parse(xhr.response)));
                 }
             };
@@ -246,11 +274,13 @@ export abstract class AbstractUploader<T> {
                     resolve(res);
                     return;
                 } catch (e: any) {
-                    if (e.status === 401 || retriesCount >= this.retries) {
+                    const retryDelay = this.retryStrategy(retriesCount, e);
+                    if (retryDelay === null) {
                         reject(e);
                         return;
                     }
-                    await this.sleep(200 + retriesCount * 500);
+                    console.log(`video upload: ${e.reason || "ERROR"}, will be retried in ${retryDelay} ms`);
+                    await this.sleep(retryDelay);
                     retriesCount++;
                 }
             }

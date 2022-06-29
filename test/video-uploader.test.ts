@@ -203,6 +203,7 @@ describe('Errors & retries', () => {
         const uploader = new VideoUploader({
             file: new File([new ArrayBuffer(200)], "filename"),
             uploadToken,
+            retryStrategy: (retryCount, error) => retryCount > 3 ? null : 10,
         });
 
         let postCounts = 0;
@@ -228,7 +229,7 @@ describe('Errors & retries', () => {
             file: new File([new ArrayBuffer(6000000)], "filename"),
             uploadToken,
             chunkSize: 5*1024*1024,
-            retries: 3,
+            retryStrategy: (retryCount, error) => retryCount > 3 ? null : 10,
         });
 
         let postCounts = 0;

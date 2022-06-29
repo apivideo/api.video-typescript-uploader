@@ -1,6 +1,10 @@
 # Changelog
 All changes to this project will be documented in this file.
 
+## [1.0.10] - 2022-06-29
+- Retry even if the server is not responding.
+- Add possibility to define a custom retry policy.
+
 ## [1.0.9] - 2022-05-24
 - Progressive upload: prevent last part to be empty
 
