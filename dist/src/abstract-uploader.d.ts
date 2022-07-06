@@ -30,10 +30,18 @@ export declare type VideoUploadResponse = {
     };
 };
 declare type RetryStrategy = (retryCount: number, error: VideoUploadError) => number | null;
+interface Origin {
+    name: string;
+    version: string;
+}
 export interface CommonOptions {
     apiHost?: string;
     retries?: number;
     retryStrategy?: RetryStrategy;
+    origin?: {
+        application?: Origin;
+        sdk?: Origin;
+    };
 }
 export interface WithUploadToken {
     uploadToken: string;
@@ -85,5 +93,6 @@ export declare abstract class AbstractUploader<T> {
     doRefreshToken(): Promise<void>;
     private createXhrPromise;
     private withRetrier;
+    private static validateOrigin;
 }
 export {};
