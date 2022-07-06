@@ -33,10 +33,19 @@ export declare type VideoUploadResponse = {
 
 type RetryStrategy = (retryCount: number, error: VideoUploadError) => number | null;
 
+interface Origin {
+    name: string;
+    version: string;
+}
+
 export interface CommonOptions {
     apiHost?: string;
     retries?: number;
     retryStrategy?: RetryStrategy;
+    origin?: {
+        application?: Origin;
+        sdk?: Origin;
+    };
 }
 
 export interface WithUploadToken {
@@ -130,6 +139,17 @@ export abstract class AbstractUploader<T> {
         this.headers["AV-Origin-Client"] = "typescript-uploader:" + PACKAGE_VERSION;
         this.retries = options.retries || DEFAULT_RETRIES;
         this.retryStrategy = options.retryStrategy || DEFAULT_RETRY_STRATEGY(this.retries);
+
+        if (options.origin) {
+            if (options.origin.application) {
+                AbstractUploader.validateOrigin("application", options.origin.application);
+                this.headers["AV-Origin-App"] = `${options.origin.application.name}:${options.origin.application.version}`;
+            }
+            if (options.origin.sdk) {
+                AbstractUploader.validateOrigin("sdk", options.origin.sdk);
+                this.headers["AV-Origin-Sdk"] = `${options.origin.sdk.name}:${options.origin.sdk.version}`;
+            }
+        }
     }
 
     public onProgress(cb: (e: T) => void) {
@@ -195,7 +215,9 @@ export abstract class AbstractUploader<T> {
         return new Promise((resolve, reject) => {
             const xhr = new window.XMLHttpRequest();
             xhr.open("POST", `https://${this.apiHost}/auth/refresh`);
-
+            for (const headerName of Object.keys(this.headers)) {
+                if(headerName !== "Authorization") xhr.setRequestHeader(headerName, this.headers[headerName]);
+            }
             xhr.onreadystatechange = (_) => {
                 if (xhr.readyState === 4 && xhr.status >= 400) {
                     reject(this.parseErrorResponse(xhr));
@@ -285,5 +307,24 @@ export abstract class AbstractUploader<T> {
                 }
             }
         });
+    }
+
+    private static validateOrigin(type: string, origin: Origin) {
+        if (!origin.name) {
+            throw new Error(`${type} name is required`);
+        }
+        if (!origin.version) {
+            throw new Error(`${type} version is required`);
+        }
+        if (!/^[\w-]{1,50}$/.test(origin.name)) {
+            throw new Error(
+                `Invalid ${type} name value. Allowed characters: A-Z, a-z, 0-9, '-', '_'. Max length: 50.`
+            );
+        }
+        if (!/^\d{1,3}(\.\d{1,3}(\.\d{1,3})?)?$/.test(origin.version)) {
+            throw new Error(
+                `Invalid ${type} version value. The version should match the xxx[.yyy][.zzz] pattern.`
+            );
+        }
     }
 }

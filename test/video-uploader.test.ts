@@ -20,7 +20,7 @@ describe('Instanciation', () => {
         expect(() => new VideoUploader({
             uploadToken: "aa",
             file: new File([""], ""),
-            chunkSize: 1024*1024*1
+            chunkSize: 1024 * 1024 * 1
         })).to.throw("Invalid chunk size. Minimal allowed value: 5MB, maximum allowed value: 128MB.");
     });
 });
@@ -35,7 +35,7 @@ describe('Content-range', () => {
         const uploader = new VideoUploader({
             file: new File([new ArrayBuffer(17000000)], "filename"),
             uploadToken,
-            chunkSize: 5*1024*1024,
+            chunkSize: 5 * 1024 * 1024,
         });
 
         const expectedRanges = [
@@ -86,6 +86,45 @@ describe('Access token auth', () => {
 });
 
 
+describe('Origin headers', () => {
+    beforeEach(() => mock.setup());
+    afterEach(() => mock.teardown());
+
+    it('token value is correct', (done) => {
+        const accessToken = "1234";
+        const videoId = "9876";
+
+        const uploader = new VideoUploader({
+            file: new File([new ArrayBuffer(200)], "filename"),
+            accessToken,
+            videoId,
+            origin: {
+                application: {
+                    name: "application-name",
+                    version: "1.0.0"
+                },
+                sdk: {
+                    name: "sdk-name",
+                    version: "2.0.0"
+                }
+            }
+        });
+
+        mock.post(`https://ws.api.video/videos/${videoId}/source`, (req, res) => {
+            expect(req.header("av-origin-app")).to.be.eq("application-name:1.0.0");
+            expect(req.header("av-origin-sdk")).to.be.eq(`sdk-name:2.0.0`);
+            return res.status(201).body("{}");
+        });
+
+        uploader.upload().then(() => {
+            done();
+        });
+
+    });
+});
+
+
+
 describe('Refresh token', () => {
     beforeEach(() => mock.setup());
     afterEach(() => mock.teardown());
@@ -110,7 +149,7 @@ describe('Refresh token', () => {
             sourceCalls++;
             expect(req.header("content-range")).to.be.eq("part 1/1");
 
-            if(sourceCalls === 1) {
+            if (sourceCalls === 1) {
                 expect(req.header("authorization")).to.be.eq(`Bearer ${accessToken1}`);
                 return res.status(401).body("{}");
             }
@@ -172,7 +211,7 @@ describe('Progress listener', () => {
             file: new File([new ArrayBuffer(6000000)], "filename"),
             accessToken: "1234",
             videoId,
-            chunkSize: 5*1024*1024
+            chunkSize: 5 * 1024 * 1024
         });
 
         mock.post(`https://ws.api.video/videos/${videoId}/source`, (req, res) => res.status(201).body("{}"));
@@ -184,7 +223,7 @@ describe('Progress listener', () => {
                 ...lastUploadProgressEvent,
                 totalBytes: 6000000,
                 chunksCount: 2,
-                chunksBytes: 5*1024*1024,
+                chunksBytes: 5 * 1024 * 1024,
                 currentChunk: 2,
             });
             done();
@@ -228,7 +267,7 @@ describe('Errors & retries', () => {
         const uploader = new VideoUploader({
             file: new File([new ArrayBuffer(6000000)], "filename"),
             uploadToken,
-            chunkSize: 5*1024*1024,
+            chunkSize: 5 * 1024 * 1024,
             retryStrategy: (retryCount, error) => retryCount > 3 ? null : 10,
         });
 
