@@ -19,8 +19,9 @@
   "scripts": {
     "tslint": "tslint --project .",
     "build": "npm run tslint && webpack --mode production",
+    "prepublishOnly": "npm run build",
     "test": "npm run build && mocha -r ts-node/register -r jsdom-global/register 'test/**/*.ts'"
-  },
+  }, 
   "devDependencies": {
     "@types/chai": "^4.2.14",
     "@types/jsdom": "^16.2.6",
