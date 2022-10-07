@@ -8,12 +8,15 @@
 
     <form>
         <input type="file" id="input" onchange="uploadFile(this.files)">
+        <input type="text" id="VideoName" placeholder="Video name">
     </form>
     <script type="text/javascript">
         function uploadFile(files) {
+            const videoName = document.getElementById('VideoName').value
             const uploader = new VideoUploader({
                 file: files[0],
-                uploadToken: "to7EcLLzRSsqhkzxyIhavEHA" // ecosystem sandbox upload token
+                uploadToken: "to7EcLLzRSsqhkzxyIhavEHA", // ecosystem sandbox upload token
+                videoName: videoName
             });
 
             uploader.upload()
