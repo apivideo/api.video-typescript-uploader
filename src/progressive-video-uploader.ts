@@ -3,6 +3,7 @@ import { PromiseQueue } from "./promise-queue";
 
 export interface ProgressiveUploadCommonOptions {
     preventEmptyParts?: boolean;
+    videoName?: string
 }
 
 export interface ProgressiveUploaderOptionsWithUploadToken extends ProgressiveUploadCommonOptions, CommonOptions, WithUploadToken { }
@@ -25,10 +26,12 @@ export class ProgressiveUploader extends AbstractUploader<ProgressiveProgressEve
     private currentPartBlobsSize = 0;
     private queue = new PromiseQueue();
     private preventEmptyParts: boolean;
+    private fileName: string;
 
     constructor(options: ProgressiveUploaderOptionsWithAccessToken | ProgressiveUploaderOptionsWithUploadToken | ProgressiveUploaderOptionsWithApiKey) {
         super(options);
         this.preventEmptyParts = options.preventEmptyParts || false;
+        this.fileName = options.videoName || 'file';
     }
 
     public uploadPart(file: Blob): Promise<void> {
@@ -71,7 +74,7 @@ export class ProgressiveUploader extends AbstractUploader<ProgressiveProgressEve
     private async upload(file: Blob, isLast: boolean = false): Promise<VideoUploadResponse> {
         const fileSize = file.size;
         return this.xhrWithRetrier({
-            body: this.createFormData(file, "file"),
+            body: this.createFormData(file, this.fileName),
             parts: {
                 currentPart: this.currentPartNum,
                 totalParts: isLast ? this.currentPartNum : '*'
