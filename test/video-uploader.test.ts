@@ -23,6 +23,20 @@ describe('Instanciation', () => {
             chunkSize: 1024 * 1024 * 1
         })).to.throw("Invalid chunk size. Minimal allowed value: 5MB, maximum allowed value: 128MB.");
     });
+
+    it ('video name is file name', (done) => {
+        const uploadToken = "the-upload-token";
+
+        const uploader = new VideoUploader({
+            file: new File([new ArrayBuffer(10)], "filename"),
+            uploadToken,
+        });
+
+        uploader.upload().then(res => {
+            expect(res.title).to.be.eq("filename");
+            done();
+        });
+    })
 });
 
 describe('Content-range', () => {
