@@ -2,7 +2,6 @@ import { AbstractUploader, CommonOptions, DEFAULT_CHUNK_SIZE, MAX_CHUNK_SIZE, MI
 
 interface UploadOptions {
     file: File;
-    videoName?: string;
     chunkSize?: number;
 }
 

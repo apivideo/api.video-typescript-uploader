@@ -3,7 +3,6 @@ import { PromiseQueue } from "./promise-queue";
 
 export interface ProgressiveUploadCommonOptions {
     preventEmptyParts?: boolean;
-    videoName?: string
 }
 
 export interface ProgressiveUploaderOptionsWithUploadToken extends ProgressiveUploadCommonOptions, CommonOptions, WithUploadToken { }
