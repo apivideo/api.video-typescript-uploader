@@ -178,13 +178,14 @@ Using delegated upload tokens for authentication is best options when uploading 
 #### Common options
 
 
-|   Option name | Mandatory | Type                                                            | Description                                                                                                   |
-| ------------: | --------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-|          file | **yes**   | File                                                            | the file you want to upload                                                                                   |
-|     chunkSize | no        | number                                                          | number of bytes of each upload chunk (default: 50MB, min: 5MB, max: 128MB)                                    |
-|       apiHost | no        | string                                                          | api.video host (default: ws.api.video)                                                                        |
-|       retries | no        | number                                                          | number of retries when an API call fails (default: 5)                                                         |
-| retryStrategy | no        | (retryCount: number, error: VideoUploadError) => number \| null | function that returns the number of ms to wait before retrying a failed upload. Returns null to stop retrying |
+|   Option name | Mandatory | Type                                                            | Description                                                                                                                              |
+| ------------: | --------- | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+|          file | **yes**   | File                                                            | the file you want to upload                                                                                                              |
+|     videoName | no        | string                                                          | the name of your video (overrides the original file name for regular uploads, overrides the default "file" name for progressive uploads) |
+|     chunkSize | no        | number                                                          | number of bytes of each upload chunk (default: 50MB, min: 5MB, max: 128MB)                                                               |
+|       apiHost | no        | string                                                          | api.video host (default: ws.api.video)                                                                                                   |
+|       retries | no        | number                                                          | number of retries when an API call fails (default: 5)                                                                                    |
+| retryStrategy | no        | (retryCount: number, error: VideoUploadError) => number \| null | function that returns the number of ms to wait before retrying a failed upload. Returns null to stop retrying                            |
 
 
 ### Example
