@@ -1,9 +1,12 @@
 # Changelog
 All changes to this project will be documented in this file.
 
+## [1.1.0] - 2022-07-06
+- Video upload & Progressive upload: allow user to set a customized video name.
+
 ## [1.0.11] - 2022-07-06
 - Add origin headers
-- 
+
 ## [1.0.10] - 2022-06-29
 - Retry even if the server is not responding.
 - Add possibility to define a custom retry policy.

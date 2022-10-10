@@ -41,6 +41,7 @@ interface Origin {
 export interface CommonOptions {
     apiHost?: string;
     retries?: number;
+    videoName?: string;
     retryStrategy?: RetryStrategy;
     origin?: {
         application?: Origin;

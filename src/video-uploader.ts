@@ -39,7 +39,7 @@ export class VideoUploader extends AbstractUploader<UploadProgressEvent> {
         this.chunkSize = options.chunkSize || DEFAULT_CHUNK_SIZE;
         this.file = options.file;
         this.fileSize = this.file.size;
-        this.fileName = this.file.name;
+        this.fileName = options.videoName || this.file.name;
 
         this.chunksCount = Math.ceil(this.fileSize / this.chunkSize);
     }
