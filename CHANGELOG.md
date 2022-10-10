@@ -1,7 +1,7 @@
 # Changelog
 All changes to this project will be documented in this file.
 
-## [1.1] - 2022-07-06
+## [1.1.0] - 2022-07-06
 - Video upload & Progressive upload: allow user to set a customized video name.
 
 ## [1.0.11] - 2022-07-06
