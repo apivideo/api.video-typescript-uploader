@@ -23,20 +23,6 @@ describe('Instanciation', () => {
             chunkSize: 1024 * 1024 * 1
         })).to.throw("Invalid chunk size. Minimal allowed value: 5MB, maximum allowed value: 128MB.");
     });
-
-    it ('video name is file name', (done) => {
-        const uploadToken = "the-upload-token";
-
-        const uploader = new VideoUploader({
-            file: new File([new ArrayBuffer(10)], "filename"),
-            uploadToken,
-        });
-
-        uploader.upload().then(res => {
-            expect(res.title).to.be.eq("filename");
-            done();
-        });
-    })
 });
 
 describe('Content-range', () => {
@@ -211,6 +197,46 @@ describe('Delegated upload', () => {
 
         uploader.upload().then(() => done());
     });
+
+    it('video name is file name', (done) => {
+        const uploadToken = "the-upload-token";
+        const videoId = "9876";
+        const fileName = "filename"
+
+        const uploader = new VideoUploader({
+            file: new File([new ArrayBuffer(10)], fileName),
+            uploadToken,
+            videoId
+        });
+
+        mock.post(`https://ws.api.video/upload?token=${uploadToken}`, (req, res) => {
+            expect(req.body().get("file").name).to.be.eql(fileName);
+            return res.status(201).body("{}");
+        });
+
+        uploader.upload().then(() => done());
+    })
+
+    it('video name is customized', (done) => {
+        const uploadToken = "the-upload-token";
+        const videoId = "9876";
+        const fileName = "filename"
+        const videoName = "video name"
+
+        const uploader = new VideoUploader({
+            file: new File([new ArrayBuffer(10)], fileName),
+            uploadToken,
+            videoId,
+            videoName
+        });
+
+        mock.post(`https://ws.api.video/upload?token=${uploadToken}`, (req, res) => {
+            expect(req.body().get("file").name).to.be.eql(videoName);
+            return res.status(201).body("{}");
+        });
+
+        uploader.upload().then(() => done());
+    })
 });
 
 describe('Progress listener', () => {
