@@ -43,6 +43,10 @@ export class ProgressiveUploader extends AbstractUploader<ProgressiveProgressEve
         if ((this.preventEmptyParts && (this.currentPartBlobsSize - file.size >= MIN_CHUNK_SIZE))
             || (!this.preventEmptyParts && (this.currentPartBlobsSize >= MIN_CHUNK_SIZE))
             || (!this.mergeSmallPartsBeforeUpload)) {
+
+            if (!this.mergeSmallPartsBeforeUpload && this.currentPartBlobsSize < MIN_CHUNK_SIZE) {
+                throw new Error(`Each part must have a minimal size of 5MB. The current part has a size of ${this.currentPartBlobsSize / 1024 / 1024}MB.`)
+            }
             let toSend: any[];
             if(this.preventEmptyParts) {
                 toSend = this.currentPartBlobs.slice(0, -1);
