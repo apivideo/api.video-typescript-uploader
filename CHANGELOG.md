@@ -1,6 +1,9 @@
 # Changelog
 All changes to this project will be documented in this file.
 
+## [1.1.1] - 2022-07-06
+- Progressive upload: add mergeSmallPartsBeforeUpload option.
+
 ## [1.1.0] - 2022-07-06
 - Video upload & Progressive upload: allow user to set a customized video name.
 
