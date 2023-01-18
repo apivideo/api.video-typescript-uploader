@@ -3,6 +3,7 @@ import { PromiseQueue } from "./promise-queue";
 
 export interface ProgressiveUploadCommonOptions {
     preventEmptyParts?: boolean;
+    mergeSmallPartsBeforeUpload?: boolean;
 }
 
 export interface ProgressiveUploaderOptionsWithUploadToken extends ProgressiveUploadCommonOptions, CommonOptions, WithUploadToken { }
@@ -26,19 +27,25 @@ export class ProgressiveUploader extends AbstractUploader<ProgressiveProgressEve
     private queue = new PromiseQueue();
     private preventEmptyParts: boolean;
     private fileName: string;
+    private mergeSmallPartsBeforeUpload: boolean;
 
     constructor(options: ProgressiveUploaderOptionsWithAccessToken | ProgressiveUploaderOptionsWithUploadToken | ProgressiveUploaderOptionsWithApiKey) {
         super(options);
         this.preventEmptyParts = options.preventEmptyParts || false;
         this.fileName = options.videoName || 'file';
+        this.mergeSmallPartsBeforeUpload = options.mergeSmallPartsBeforeUpload ?? true;
     }
 
     public uploadPart(file: Blob): Promise<void> {
+        if (!this.mergeSmallPartsBeforeUpload && file.size < MIN_CHUNK_SIZE) {
+            throw new Error(`Each part must have a minimal size of 5MB. The current part has a size of ${this.currentPartBlobsSize / 1024 / 1024}MB.`)
+        }
         this.currentPartBlobsSize += file.size;
         this.currentPartBlobs.push(file);
 
         if ((this.preventEmptyParts && (this.currentPartBlobsSize - file.size >= MIN_CHUNK_SIZE))
-            || (!this.preventEmptyParts && (this.currentPartBlobsSize >= MIN_CHUNK_SIZE))) {
+            || (!this.preventEmptyParts && (this.currentPartBlobsSize >= MIN_CHUNK_SIZE))
+            || (!this.mergeSmallPartsBeforeUpload)) {
 
             let toSend: any[];
             if(this.preventEmptyParts) {
