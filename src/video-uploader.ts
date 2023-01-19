@@ -49,14 +49,10 @@ export class VideoUploader extends AbstractUploader<UploadProgressEvent> {
 
 
     public async upload(): Promise<VideoUploadResponse> {
-        if (this.maxVideoDuration !== null && !document) {
+        if (this.maxVideoDuration !== undefined && !document) {
             throw Error('document is undefined. Impossible to use the maxVideoDuration option. Remove it and try again.')
         }
-        let tooLong: boolean = false;
-        if (this.maxVideoDuration !== null) {
-            tooLong = await this.checkVideoDuration();
-        }
-        if (tooLong) {
+        if (this.maxVideoDuration !== undefined && await this.isVideoTooLong()) {
             throw Error(`The video submitted is too long.`);
         }
         let res: VideoUploadResponse;
@@ -67,7 +63,7 @@ export class VideoUploader extends AbstractUploader<UploadProgressEvent> {
         return res!;
     }
 
-    private async checkVideoDuration(): Promise<boolean> {
+    private async isVideoTooLong(): Promise<boolean> {
         return new Promise(resolve => {
             const video = document.createElement('video');
             video.preload = 'metadata';
