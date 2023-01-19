@@ -1,7 +1,10 @@
 # Changelog
 All changes to this project will be documented in this file.
 
-## [1.1.1] - 2022-07-06
+## [1.1.2] - 2023-01-19
+- Video upload: add maxVideoDuration option.
+
+## [1.1.1] - 2023-01-17
 - Progressive upload: add mergeSmallPartsBeforeUpload option.
 
 ## [1.1.0] - 2022-07-06
