@@ -3,6 +3,7 @@ import { AbstractUploader, CommonOptions, DEFAULT_CHUNK_SIZE, MAX_CHUNK_SIZE, MI
 interface UploadOptions {
     file: File;
     chunkSize?: number;
+    maxVideoDuration?: number;
 }
 
 export interface VideoUploaderOptionsWithUploadToken extends CommonOptions, UploadOptions, WithUploadToken { }
@@ -24,6 +25,7 @@ export class VideoUploader extends AbstractUploader<UploadProgressEvent> {
     private chunksCount: number;
     private fileSize: number;
     private fileName: string;
+    private maxVideoDuration?: number;
 
     constructor(options: VideoUploaderOptionsWithAccessToken | VideoUploaderOptionsWithUploadToken | VideoUploaderOptionsWithApiKey) {
         super(options);
@@ -42,16 +44,35 @@ export class VideoUploader extends AbstractUploader<UploadProgressEvent> {
         this.fileName = options.videoName || this.file.name;
 
         this.chunksCount = Math.ceil(this.fileSize / this.chunkSize);
+        this.maxVideoDuration = options.maxVideoDuration;
     }
 
 
     public async upload(): Promise<VideoUploadResponse> {
+        if (this.maxVideoDuration !== undefined && !document) {
+            throw Error('document is undefined. Impossible to use the maxVideoDuration option. Remove it and try again.')
+        }
+        if (this.maxVideoDuration !== undefined && await this.isVideoTooLong()) {
+            throw Error(`The video submitted is too long.`);
+        }
         let res: VideoUploadResponse;
         for(let i = 0; i < this.chunksCount; i++) {
             res = await this.uploadCurrentChunk(i);
             this.videoId = res.videoId;
         }
         return res!;
+    }
+
+    private async isVideoTooLong(): Promise<boolean> {
+        return new Promise(resolve => {
+            const video = document.createElement('video');
+            video.preload = 'metadata';
+            video.onloadedmetadata = () => {
+                window.URL.revokeObjectURL(video.src);
+                resolve(video.duration > this.maxVideoDuration!)
+            }
+            video.src = URL.createObjectURL(this.file);
+        })
     }
 
     private uploadCurrentChunk(chunkNumber: number): Promise<VideoUploadResponse> {
