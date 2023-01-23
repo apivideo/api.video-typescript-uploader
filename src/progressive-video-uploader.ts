@@ -36,7 +36,7 @@ export class ProgressiveUploader extends AbstractUploader<ProgressiveProgressEve
         this.mergeSmallPartsBeforeUpload = options.mergeSmallPartsBeforeUpload ?? true;
     }
 
-    public uploadPart(file: Blob): Promise<void> {
+    public uploadPart(file: Blob): Promise<VideoUploadResponse | void> {
         if (!this.mergeSmallPartsBeforeUpload && file.size < MIN_CHUNK_SIZE) {
             throw new Error(`Each part must have a minimal size of 5MB. The current part has a size of ${this.currentPartBlobsSize / 1024 / 1024}MB.`)
         }
@@ -62,6 +62,7 @@ export class ProgressiveUploader extends AbstractUploader<ProgressiveProgressEve
                 if (toSend.length > 0) {
                     const promise = this.upload(new Blob(toSend)).then(res => {
                         this.videoId = res.videoId;
+                        return res;
                     });
                     this.currentPartNum++;
                     return promise;
@@ -72,9 +73,15 @@ export class ProgressiveUploader extends AbstractUploader<ProgressiveProgressEve
         return Promise.resolve();
     }
 
-    public uploadLastPart(file: Blob): Promise<VideoUploadResponse> {
+    public async uploadLastPart(file: Blob): Promise<VideoUploadResponse> {
         this.currentPartBlobs.push(file);
-        return this.queue.add(() => this.upload(new Blob(this.currentPartBlobs), true));
+        const res = await this.queue.add(() => this.upload(new Blob(this.currentPartBlobs), true));
+
+        if(this.onPlayableCallbacks.length > 0) {
+            this.waitForPlayable(res!);
+        }
+
+        return res;
     }
 
     private async upload(file: Blob, isLast: boolean = false): Promise<VideoUploadResponse> {

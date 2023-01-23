@@ -105,6 +105,7 @@ export abstract class AbstractUploader<T> {
     protected retries: number;
     protected headers: { [name: string]: string } = {};
     protected onProgressCallbacks: ((e: T) => void)[] = [];
+    protected onPlayableCallbacks: ((e: VideoUploadResponse) => void)[] = [];
     protected refreshToken?: string;
     protected apiHost: string;
     protected retryStrategy: RetryStrategy;
@@ -156,6 +157,32 @@ export abstract class AbstractUploader<T> {
     public onProgress(cb: (e: T) => void) {
         this.onProgressCallbacks.push(cb);
     }
+
+    public onPlayable(cb: (e: VideoUploadResponse) => void) {
+        this.onPlayableCallbacks.push(cb);
+    }
+
+    protected async waitForPlayable(video: VideoUploadResponse) {
+        const hls = video.assets?.hls;
+
+        while (true) {
+            await this.sleep(500);
+
+            const hlsRes = await fetch(hls!);
+
+            if(hlsRes.status === 202) {
+                continue;
+            }
+
+            if((await hlsRes.text()).length === 0) {
+                continue;
+            }
+
+            break;
+        }
+
+        this.onPlayableCallbacks.forEach(cb => cb(video));
+    };
 
     protected parseErrorResponse(xhr: XMLHttpRequest): VideoUploadError {
         try {
@@ -217,7 +244,7 @@ export abstract class AbstractUploader<T> {
             const xhr = new window.XMLHttpRequest();
             xhr.open("POST", `https://${this.apiHost}/auth/refresh`);
             for (const headerName of Object.keys(this.headers)) {
-                if(headerName !== "Authorization") xhr.setRequestHeader(headerName, this.headers[headerName]);
+                if (headerName !== "Authorization") xhr.setRequestHeader(headerName, this.headers[headerName]);
             }
             xhr.onreadystatechange = (_) => {
                 if (xhr.readyState === 4 && xhr.status >= 400) {

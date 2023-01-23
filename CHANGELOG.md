@@ -1,6 +1,9 @@
 # Changelog
 All changes to this project will be documented in this file.
 
+## [1.1.3] - 2023-01-23
+- Add onPlayable() method to define a listener called when the video is playable
+  
 ## [1.1.2] - 2023-01-19
 - Video upload: add maxVideoDuration option.
 

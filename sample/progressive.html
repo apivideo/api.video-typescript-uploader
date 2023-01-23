@@ -1,0 +1,54 @@
+<html>
+
+<head>
+    <script src="../dist/index.js"></script>
+</head>
+
+<body>
+
+    <form>
+        <input type="file" id="input" onchange="uploadFile(this.files)">
+        <input type="text" id="VideoName" placeholder="Video name">
+        <div id="res"></div>
+    </form>
+    <script type="text/javascript">
+        async function uploadFile(files) {
+            const videoName = document.getElementById('VideoName').value
+            const uploader = new ProgressiveUploader({
+                uploadToken: "to7EcLLzRSsqhkzxyIhavEHA", // ecosystem sandbox upload token
+                videoName: videoName
+            });
+            
+            uploader.onPlayable(v => {
+                console.log("Playable", v);
+                document.getElementById('res').innerHTML = v.assets.iframe;
+            });
+            
+            const f = files[0];
+
+            const fileSize = f.size;
+
+            if(fileSize < 5 * 1024 * 1024) {
+                throw new Error("File size must be greater than 5MB");
+            }
+
+            const chunkSize = 1024 * 1024 * 10;
+            const chunkCount = Math.ceil(fileSize / chunkSize);
+            for (let i = 0; i < chunkCount; i++) {
+                const start = i * chunkSize;
+                const end = Math.min(fileSize, start + chunkSize);
+                const chunk = f.slice(start, end);
+
+                console.log(`Starting upload of part ${i+1}/${chunkCount}`);
+
+                const res =  end !== fileSize 
+                    ? await uploader.uploadPart(chunk)
+                    : await uploader.uploadLastPart(chunk)
+                
+                console.log(`Part ${i+1}/${chunkCount} uploaded`, res);
+            }
+        }
+    </script>
+</body>
+
+</html>
