@@ -27,6 +27,7 @@
   - [Methods](#methods)
     - [`upload()`](#upload)
     - [`onProgress()`](#onprogress)
+    - [`onPlayable()`](#onplayable)
 - [Documentation - Progressive upload](#documentation---progressive-upload)
   - [Instanciation](#instanciation-1)
     - [Options](#options-1)
@@ -38,6 +39,7 @@
     - [`uploadPart(file: Blob)`](#uploadpartfile-blob)
     - [`uploadLastPart(file: Blob)`](#uploadlastpartfile-blob)
     - [`onProgress()`](#onprogress-1)
+    - [`onPlayable()`](#onplayable-1)
 
 # Project description
 
@@ -244,6 +246,26 @@ An onProgress event contains the following attributes:
     });
 ```
 
+
+### `onPlayable()`
+
+The onPlayable() method let you defined a listener that will be called when the video is playable. It takes a callback function with one parameter: the `video` object returned by the API.
+
+**Example**
+
+```html
+    <div id="player-container"></div>
+
+    <script>
+        // ... uploader instanciation
+    
+        uploader.onPlayable((video) => {
+            // the video is playable, we can display the player
+            document.getElementById('player-container').innerHTML = v.assets.iframe;
+        });
+    </script>
+```
+
 # Documentation - Progressive upload
 
 
@@ -347,3 +369,23 @@ An onProgress event contains the following attributes:
         console.log(`total size of the file: ${event.totalBytes}.`);
     });
 ```
+
+### `onPlayable()`
+
+The onPlayable() method let you defined a listener that will be called when the video is playable. It takes a callback function with one parameter: the `video` object returned by the API.
+
+**Example**
+
+```html
+    <div id="player-container"></div>
+
+    <script>
+        // ... uploader instanciation
+    
+        uploader.onPlayable((video) => {
+            // the video is playable, we can display the player
+            document.getElementById('player-container').innerHTML = v.assets.iframe;
+        });
+    </script>
+```
+

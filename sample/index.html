@@ -9,6 +9,9 @@
     <form>
         <input type="file" id="input" onchange="uploadFile(this.files)">
         <input type="text" id="VideoName" placeholder="Video name">
+        <div id="res">
+
+        </div>
     </form>
     <script type="text/javascript">
         function uploadFile(files) {
@@ -16,7 +19,13 @@
             const uploader = new VideoUploader({
                 file: files[0],
                 uploadToken: "to7EcLLzRSsqhkzxyIhavEHA", // ecosystem sandbox upload token
-                videoName: videoName
+                videoName: videoName,
+                maxVideoDuration: 33
+            });
+
+            uploader.onPlayable(v => {
+                console.log("Playable", v);
+                document.getElementById('res').innerHTML = v.assets.iframe;
             });
 
             uploader.upload()
