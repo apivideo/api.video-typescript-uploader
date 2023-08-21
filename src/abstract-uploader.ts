@@ -28,6 +28,7 @@ export declare type VideoUploadResponse = {
         readonly player?: string;
         readonly hls?: string;
         readonly thumbnail?: string;
+        readonly mp4?: string;
     };
 };
 
