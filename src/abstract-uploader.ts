@@ -32,7 +32,10 @@ export declare type VideoUploadResponse = {
     };
 };
 
-type RetryStrategy = (retryCount: number, error: VideoUploadError) => number | null;
+type RetryStrategy = (
+    retryCount: number,
+    error: VideoUploadError,
+) => number | null;
 
 interface Origin {
     name: string;
@@ -72,15 +75,20 @@ export type VideoUploadError = {
     title?: string;
     reason?: string;
     raw: string;
-}
+};
 
 type HXRRequestParams = {
     parts?: {
         currentPart: number;
         totalParts: number | "*";
-    },
+    };
     onProgress?: (e: ProgressEvent) => void;
     body: Document | XMLHttpRequestBodyInit | null;
+};
+
+export interface CancelableOperation<T> {
+    cancel: () => void;
+    result: Promise<T>;
 }
 
 let PACKAGE_VERSION = "";
@@ -93,11 +101,14 @@ try {
 
 export const DEFAULT_RETRY_STRATEGY = (maxRetries: number) => {
     return (retryCount: number, error: VideoUploadError) => {
-        if ((error.status && error.status >= 400 && error.status < 500) || retryCount >= maxRetries) {
+        if (
+            (error.status && error.status >= 400 && error.status < 500) ||
+            retryCount >= maxRetries
+        ) {
             return null;
         }
         return Math.floor(200 + 2000 * retryCount * (retryCount + 1));
-    }
+    };
 };
 
 export abstract class AbstractUploader<T> {
@@ -110,8 +121,11 @@ export abstract class AbstractUploader<T> {
     protected refreshToken?: string;
     protected apiHost: string;
     protected retryStrategy: RetryStrategy;
+    protected abortControllers: { [id: string]: AbortController } = {};
 
-    constructor(options: CommonOptions & (WithAccessToken | WithUploadToken | WithApiKey)) {
+    constructor(
+        options: CommonOptions & (WithAccessToken | WithUploadToken | WithApiKey),
+    ) {
         this.apiHost = options.apiHost || DEFAULT_API_HOST;
 
         if (options.hasOwnProperty("uploadToken")) {
@@ -120,7 +134,6 @@ export abstract class AbstractUploader<T> {
                 this.videoId = optionsWithUploadToken.videoId;
             }
             this.uploadEndpoint = `https://${this.apiHost}/upload?token=${optionsWithUploadToken.uploadToken}`;
-
         } else if (options.hasOwnProperty("accessToken")) {
             const optionsWithAccessToken = options as WithAccessToken;
             if (!optionsWithAccessToken.videoId) {
@@ -135,22 +148,34 @@ export abstract class AbstractUploader<T> {
                 throw new Error("'videoId' is missing");
             }
             this.uploadEndpoint = `https://${this.apiHost}/videos/${optionsWithApiKey.videoId}/source`;
-            this.headers.Authorization = `Basic ${btoa(optionsWithApiKey.apiKey + ":")}`;
+            this.headers.Authorization = `Basic ${btoa(
+                optionsWithApiKey.apiKey + ":",
+            )}`;
         } else {
-            throw new Error(`You must provide either an accessToken, an uploadToken or an API key`);
+            throw new Error(
+                `You must provide either an accessToken, an uploadToken or an API key`,
+            );
         }
         this.headers["AV-Origin-Client"] = "typescript-uploader:" + PACKAGE_VERSION;
         this.retries = options.retries || DEFAULT_RETRIES;
-        this.retryStrategy = options.retryStrategy || DEFAULT_RETRY_STRATEGY(this.retries);
+        this.retryStrategy =
+            options.retryStrategy || DEFAULT_RETRY_STRATEGY(this.retries);
 
         if (options.origin) {
             if (options.origin.application) {
-                AbstractUploader.validateOrigin("application", options.origin.application);
-                this.headers["AV-Origin-App"] = `${options.origin.application.name}:${options.origin.application.version}`;
+                AbstractUploader.validateOrigin(
+                    "application",
+                    options.origin.application,
+                );
+                this.headers[
+                    "AV-Origin-App"
+                ] = `${options.origin.application.name}:${options.origin.application.version}`;
             }
             if (options.origin.sdk) {
                 AbstractUploader.validateOrigin("sdk", options.origin.sdk);
-                this.headers["AV-Origin-Sdk"] = `${options.origin.sdk.name}:${options.origin.sdk.version}`;
+                this.headers[
+                    "AV-Origin-Sdk"
+                ] = `${options.origin.sdk.name}:${options.origin.sdk.version}`;
             }
         }
     }
@@ -171,19 +196,19 @@ export abstract class AbstractUploader<T> {
 
             const hlsRes = await fetch(hls!);
 
-            if(hlsRes.status === 202) {
+            if (hlsRes.status === 202) {
                 continue;
             }
 
-            if((await hlsRes.text()).length === 0) {
+            if ((await hlsRes.text()).length === 0) {
                 continue;
             }
 
             break;
         }
 
-        this.onPlayableCallbacks.forEach(cb => cb(video));
-    };
+        this.onPlayableCallbacks.forEach((cb) => cb(video));
+    }
 
     protected parseErrorResponse(xhr: XMLHttpRequest): VideoUploadError {
         try {
@@ -192,8 +217,8 @@ export abstract class AbstractUploader<T> {
             return {
                 status: xhr.status,
                 raw: xhr.response,
-                ...parsedResponse
-            }
+                ...parsedResponse,
+            };
         } catch (e) {
             // empty
         }
@@ -202,14 +227,18 @@ export abstract class AbstractUploader<T> {
             status: xhr.status,
             raw: xhr.response,
             reason: "UNKWOWN",
-        }
+        };
     }
 
-    protected apiResponseToVideoUploadResponse(response: any): VideoUploadResponse {
+    protected apiResponseToVideoUploadResponse(
+        response: any,
+    ): VideoUploadResponse {
         const res = {
             ...response,
             _public: response.public,
-            publishedAt: response.publishedAt ? new Date(response.publishedAt) : undefined,
+            publishedAt: response.publishedAt
+                ? new Date(response.publishedAt)
+                : undefined,
             createdAt: response.createdAt ? new Date(response.createdAt) : undefined,
             updatedAt: response.updatedAt ? new Date(response.updatedAt) : undefined,
         };
@@ -220,18 +249,24 @@ export abstract class AbstractUploader<T> {
     protected sleep(duration: number): Promise<void> {
         return new Promise((resolve, reject) => {
             setTimeout(() => resolve(), duration);
-        })
+        });
     }
 
-
-    protected xhrWithRetrier(params: HXRRequestParams): Promise<VideoUploadResponse> {
-        return this.withRetrier(() => this.createXhrPromise(params))
+    protected xhrWithRetrier(
+        params: HXRRequestParams,
+    ): CancelableOperation<VideoUploadResponse> {
+        return this.withRetrier((abortController: AbortController) =>
+            this.createXhrPromise(params, abortController),
+        );
     }
 
-    protected createFormData(file: Blob, fileName: string, startByte?: number, endByte?: number): FormData {
-        const chunk = (startByte || endByte)
-            ? file.slice(startByte, endByte)
-            : file;
+    protected createFormData(
+        file: Blob,
+        fileName: string,
+        startByte?: number,
+        endByte?: number,
+    ): FormData {
+        const chunk = startByte || endByte ? file.slice(startByte, endByte) : file;
         const chunkForm = new FormData();
         if (this.videoId) {
             chunkForm.append("videoId", this.videoId);
@@ -245,13 +280,14 @@ export abstract class AbstractUploader<T> {
             const xhr = new window.XMLHttpRequest();
             xhr.open("POST", `https://${this.apiHost}/auth/refresh`);
             for (const headerName of Object.keys(this.headers)) {
-                if (headerName !== "Authorization") xhr.setRequestHeader(headerName, this.headers[headerName]);
+                if (headerName !== "Authorization")
+                    xhr.setRequestHeader(headerName, this.headers[headerName]);
             }
             xhr.onreadystatechange = (_) => {
                 if (xhr.readyState === 4 && xhr.status >= 400) {
                     reject(this.parseErrorResponse(xhr));
                 }
-            }
+            };
             xhr.onload = (_) => {
                 const response = JSON.parse(xhr.response);
                 if (response.refresh_token && response.access_token) {
@@ -262,17 +298,33 @@ export abstract class AbstractUploader<T> {
                 }
                 reject(this.parseErrorResponse(xhr));
             };
-            xhr.send(JSON.stringify({
-                refreshToken: this.refreshToken
-            }));
+            xhr.send(
+                JSON.stringify({
+                    refreshToken: this.refreshToken,
+                }),
+            );
         });
     }
-    private createXhrPromise(params: HXRRequestParams): Promise<VideoUploadResponse> {
+    private createXhrPromise(
+        params: HXRRequestParams,
+        abortController: AbortController,
+    ): Promise<VideoUploadResponse> {
         return new Promise((resolve, reject) => {
             const xhr = new window.XMLHttpRequest();
             xhr.open("POST", `${this.uploadEndpoint}`, true);
+            abortController.signal.addEventListener("abort", () => {
+                xhr.abort();
+                reject({
+                    status: undefined,
+                    raw: undefined,
+                    reason: "ABORTED",
+                });
+            });
             if (params.parts) {
-                xhr.setRequestHeader("Content-Range", `part ${params.parts.currentPart}/${params.parts.totalParts}`);
+                xhr.setRequestHeader(
+                    "Content-Range",
+                    `part ${params.parts.currentPart}/${params.parts.totalParts}`,
+                );
             }
             for (const headerName of Object.keys(this.headers)) {
                 xhr.setRequestHeader(headerName, this.headers[headerName]);
@@ -281,11 +333,12 @@ export abstract class AbstractUploader<T> {
                 xhr.upload.onprogress = (e) => params.onProgress!(e);
             }
             xhr.onreadystatechange = (_) => {
-                if (xhr.readyState === 4) { // DONE
+                if (xhr.readyState === 4) {
+                    // DONE
                     if (xhr.status === 401 && this.refreshToken) {
                         return this.doRefreshToken()
-                            .then(() => this.createXhrPromise(params))
-                            .then(res => resolve(res))
+                            .then(() => this.createXhrPromise(params, abortController))
+                            .then((res) => resolve(res))
                             .catch((e) => reject(e));
                     } else if (xhr.status >= 400) {
                         reject(this.parseErrorResponse(xhr));
@@ -299,43 +352,71 @@ export abstract class AbstractUploader<T> {
                     raw: undefined,
                     reason: "NETWORK_ERROR",
                 });
-            }
+            };
             xhr.ontimeout = (e) => {
                 reject({
                     status: undefined,
                     raw: undefined,
                     reason: "NETWORK_TIMEOUT",
                 });
-            }
+            };
             xhr.onload = (_) => {
                 if (xhr.status < 400) {
-                    resolve(this.apiResponseToVideoUploadResponse(JSON.parse(xhr.response)));
+                    resolve(
+                        this.apiResponseToVideoUploadResponse(JSON.parse(xhr.response)),
+                    );
                 }
             };
             xhr.send(params.body);
         });
     }
 
-    private async withRetrier(fn: () => Promise<VideoUploadResponse>): Promise<VideoUploadResponse> {
-        return new Promise(async (resolve, reject) => {
-            let retriesCount = 0;
-            while (true) {
-                try {
-                    const res = await fn();
-                    resolve(res);
-                    return;
-                } catch (e: any) {
-                    const retryDelay = this.retryStrategy(retriesCount, e);
-                    if (retryDelay === null) {
-                        reject(e);
+    private withRetrier(
+        fn: (abortController: AbortController) => Promise<VideoUploadResponse>,
+    ): CancelableOperation<VideoUploadResponse> {
+        // generate a unique random id for this upload
+        const id =
+            Math.random().toString(36).substring(2, 15) +
+            Math.random().toString(36).substring(2, 15);
+        const abortController = new AbortController();
+        this.abortControllers[id] = abortController;
+
+        const promise = new Promise<VideoUploadResponse>(
+            async (resolve, reject) => {
+                let retriesCount = 0;
+                while (true) {
+                    try {
+                        const res = await fn(abortController);
+                        resolve(res);
                         return;
+                    } catch (e: any) {
+                        if (e.reason === "ABORTED") {
+                            reject(e);
+                            return;
+                        }
+                        const retryDelay = this.retryStrategy(retriesCount, e);
+                        if (retryDelay === null) {
+                            reject(e);
+                            return;
+                        }
+                        console.log(
+                            `video upload: ${e.reason || "ERROR"
+                            }, will be retried in ${retryDelay} ms`,
+                        );
+                        await this.sleep(retryDelay);
+                        retriesCount++;
                     }
-                    console.log(`video upload: ${e.reason || "ERROR"}, will be retried in ${retryDelay} ms`);
-                    await this.sleep(retryDelay);
-                    retriesCount++;
                 }
-            }
-        });
+            },
+        );
+
+        return {
+            cancel: () => {
+                this.abortControllers[id].abort();
+                delete this.abortControllers[id];
+            },
+            result: promise,
+        };
     }
 
     private static validateOrigin(type: string, origin: Origin) {
@@ -347,12 +428,12 @@ export abstract class AbstractUploader<T> {
         }
         if (!/^[\w-]{1,50}$/.test(origin.name)) {
             throw new Error(
-                `Invalid ${type} name value. Allowed characters: A-Z, a-z, 0-9, '-', '_'. Max length: 50.`
+                `Invalid ${type} name value. Allowed characters: A-Z, a-z, 0-9, '-', '_'. Max length: 50.`,
             );
         }
         if (!/^\d{1,3}(\.\d{1,3}(\.\d{1,3})?)?$/.test(origin.version)) {
             throw new Error(
-                `Invalid ${type} version value. The version should match the xxx[.yyy][.zzz] pattern.`
+                `Invalid ${type} version value. The version should match the xxx[.yyy][.zzz] pattern.`,
             );
         }
     }
