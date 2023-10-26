@@ -27,6 +27,7 @@
   - [Methods](#methods)
     - [`upload()`](#upload)
     - [`onProgress()`](#onprogress)
+    - [`cancel()`](#cancel)
     - [`onPlayable()`](#onplayable)
 - [Documentation - Progressive upload](#documentation---progressive-upload)
   - [Instanciation](#instanciation-1)
@@ -39,6 +40,7 @@
     - [`uploadPart(file: Blob)`](#uploadpartfile-blob)
     - [`uploadLastPart(file: Blob)`](#uploadlastpartfile-blob)
     - [`onProgress()`](#onprogress-1)
+    - [`cancel()`](#cancel-1)
     - [`onPlayable()`](#onplayable-1)
 
 # Project description
@@ -231,6 +233,11 @@ An onProgress event contains the following attributes:
 - currentChunk (number): index of the chunk being uploaded
 - currentChunkUploadedBytes (number): number of bytes uploaded for the current chunk
 
+### `cancel()`
+
+The cancel() method cancels the upload. It takes no parameter. 
+
+
 **Example**
 
 ```javascript
@@ -358,6 +365,7 @@ The onProgress() method let you defined an upload progress listener. It takes a 
 An onProgress event contains the following attributes:
 - uploadedBytes (number): total number of bytes uploaded for this upload
 - totalBytes (number): total size of the file
+- part (number): index of the part being uploaded
 
 **Example**
 
@@ -367,8 +375,13 @@ An onProgress event contains the following attributes:
     uploader.onProgress((event) => {
         console.log(`total number of bytes uploaded for this upload: ${event.uploadedBytes}.`);
         console.log(`total size of the file: ${event.totalBytes}.`);
+        console.log(`current part: ${event.part}.`);
     });
 ```
+
+### `cancel()`
+
+The cancel() method cancels the upload. It takes no parameter. 
 
 ### `onPlayable()`
 

@@ -1,6 +1,10 @@
 # Changelog
 All changes to this project will be documented in this file.
 
+## [1.1.5] - 2023-10-26
+- Add cancel() methods
+- Add part number in progressive upload onProgress() 
+
 ## [1.1.4] - 2023-08-21
 - Include `mp4` in VideoUploadResponse type
 
