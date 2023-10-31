@@ -42,6 +42,7 @@
     - [`onProgress()`](#onprogress-1)
     - [`cancel()`](#cancel-1)
     - [`onPlayable()`](#onplayable-1)
+- [Static wrapper](#static-wrapper)
 
 # Project description
 
@@ -402,3 +403,7 @@ The onPlayable() method let you defined a listener that will be called when the 
     </script>
 ```
 
+
+# Static wrapper
+
+For situations where managing object instances is impractical, consider using the [UploaderStaticWrapper](./doc/UploaderStaticWrapper.md) class, which offers static method equivalents for all functionalities.
